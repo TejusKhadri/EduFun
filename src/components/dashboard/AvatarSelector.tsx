@@ -13,6 +13,12 @@ import avatar1 from '@/assets/avatar-1.png';
 import avatar2 from '@/assets/avatar-2.png';
 import avatar3 from '@/assets/avatar-3.png';
 import avatar4 from '@/assets/avatar-4.png';
+import avatarWoman1 from '@/assets/avatar-woman-1.png';
+import avatarMan1 from '@/assets/avatar-man-1.png';
+import avatarWoman2 from '@/assets/avatar-woman-2.png';
+import avatarMan2 from '@/assets/avatar-man-2.png';
+import avatarWoman3 from '@/assets/avatar-woman-3.png';
+import avatarMan3 from '@/assets/avatar-man-3.png';
 
 interface AvatarSelectorProps {
   currentAvatarUrl?: string;
@@ -21,10 +27,14 @@ interface AvatarSelectorProps {
 }
 
 const DEFAULT_AVATARS = [
-  { id: 'avatar-1', url: avatar1, name: 'Professional Blue' },
-  { id: 'avatar-2', url: avatar2, name: 'Friendly Green' },
-  { id: 'avatar-3', url: avatar3, name: 'Creative Purple' },
-  { id: 'avatar-4', url: avatar4, name: 'Warm Orange' }
+  { id: 'avatar-woman-1', url: avatarWoman1, name: 'Professional Woman', gender: 'Female' },
+  { id: 'avatar-man-1', url: avatarMan1, name: 'Professional Man', gender: 'Male' },
+  { id: 'avatar-woman-2', url: avatarWoman2, name: 'Friendly Woman', gender: 'Female' },
+  { id: 'avatar-man-2', url: avatarMan2, name: 'Creative Man', gender: 'Male' },
+  { id: 'avatar-woman-3', url: avatarWoman3, name: 'Modern Woman', gender: 'Female' },
+  { id: 'avatar-man-3', url: avatarMan3, name: 'Young Man', gender: 'Male' },
+  { id: 'avatar-1', url: avatar1, name: 'Classic Blue', gender: 'Neutral' },
+  { id: 'avatar-2', url: avatar2, name: 'Nature Green', gender: 'Neutral' }
 ];
 
 export function AvatarSelector({ currentAvatarUrl, userId, onAvatarUpdate }: AvatarSelectorProps) {
@@ -137,35 +147,108 @@ export function AvatarSelector({ currentAvatarUrl, userId, onAvatarUpdate }: Ava
 
           {/* Default Avatars */}
           <div>
-            <Label className="text-sm font-medium mb-3 block">Choose from defaults</Label>
-            <div className="grid grid-cols-4 gap-3">
-              {DEFAULT_AVATARS.map((avatar) => (
-                <div
-                  key={avatar.id}
-                  className="relative group cursor-pointer"
-                  onClick={() => handleDefaultAvatarSelect(avatar.url)}
-                >
-                  <div className={`relative rounded-lg overflow-hidden border-2 transition-colors ${
-                    selectedAvatar === avatar.url 
-                      ? 'border-primary shadow-md' 
-                      : 'border-muted hover:border-primary/50'
-                  }`}>
-                    <img 
-                      src={avatar.url} 
-                      alt={avatar.name}
-                      className="w-full aspect-square object-cover"
-                    />
-                    {selectedAvatar === avatar.url && (
-                      <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                        <Check className="w-6 h-6 text-primary" />
-                      </div>
-                    )}
+            <Label className="text-sm font-medium mb-4 block">Choose from defaults</Label>
+            
+            {/* Women Avatars */}
+            <div className="mb-6">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Women</p>
+              <div className="grid grid-cols-3 gap-3">
+                {DEFAULT_AVATARS.filter(avatar => avatar.gender === 'Female').map((avatar) => (
+                  <div
+                    key={avatar.id}
+                    className="relative group cursor-pointer"
+                    onClick={() => handleDefaultAvatarSelect(avatar.url)}
+                  >
+                    <div className={`relative rounded-lg overflow-hidden border-2 transition-colors ${
+                      selectedAvatar === avatar.url 
+                        ? 'border-primary shadow-md' 
+                        : 'border-muted hover:border-primary/50'
+                    }`}>
+                      <img 
+                        src={avatar.url} 
+                        alt={avatar.name}
+                        className="w-full aspect-square object-cover"
+                      />
+                      {selectedAvatar === avatar.url && (
+                        <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+                          <Check className="w-6 h-6 text-primary" />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-center mt-1 text-muted-foreground">
+                      {avatar.name}
+                    </p>
                   </div>
-                  <p className="text-xs text-center mt-1 text-muted-foreground">
-                    {avatar.name}
-                  </p>
-                </div>
-              ))}
+                ))}
+              </div>
+            </div>
+
+            {/* Men Avatars */}
+            <div className="mb-6">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Men</p>
+              <div className="grid grid-cols-3 gap-3">
+                {DEFAULT_AVATARS.filter(avatar => avatar.gender === 'Male').map((avatar) => (
+                  <div
+                    key={avatar.id}
+                    className="relative group cursor-pointer"
+                    onClick={() => handleDefaultAvatarSelect(avatar.url)}
+                  >
+                    <div className={`relative rounded-lg overflow-hidden border-2 transition-colors ${
+                      selectedAvatar === avatar.url 
+                        ? 'border-primary shadow-md' 
+                        : 'border-muted hover:border-primary/50'
+                    }`}>
+                      <img 
+                        src={avatar.url} 
+                        alt={avatar.name}
+                        className="w-full aspect-square object-cover"
+                      />
+                      {selectedAvatar === avatar.url && (
+                        <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+                          <Check className="w-6 h-6 text-primary" />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-center mt-1 text-muted-foreground">
+                      {avatar.name}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Neutral Avatars */}
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-2">Neutral</p>
+              <div className="grid grid-cols-2 gap-3">
+                {DEFAULT_AVATARS.filter(avatar => avatar.gender === 'Neutral').map((avatar) => (
+                  <div
+                    key={avatar.id}
+                    className="relative group cursor-pointer"
+                    onClick={() => handleDefaultAvatarSelect(avatar.url)}
+                  >
+                    <div className={`relative rounded-lg overflow-hidden border-2 transition-colors ${
+                      selectedAvatar === avatar.url 
+                        ? 'border-primary shadow-md' 
+                        : 'border-muted hover:border-primary/50'
+                    }`}>
+                      <img 
+                        src={avatar.url} 
+                        alt={avatar.name}
+                        className="w-full aspect-square object-cover"
+                      />
+                      {selectedAvatar === avatar.url && (
+                        <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+                          <Check className="w-6 h-6 text-primary" />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-center mt-1 text-muted-foreground">
+                      {avatar.name}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
