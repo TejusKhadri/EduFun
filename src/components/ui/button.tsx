@@ -15,8 +15,10 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        eduplay: "bg-gradient-to-r from-primary to-accent text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200",
-        google: "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-md",
+        eduplay: "bg-gradient-fun text-white font-bold shadow-fun hover:shadow-glow transform hover:scale-105 transition-all duration-300 rounded-xl",
+        google: "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-card hover:shadow-fun transition-all duration-200",
+        fun: "bg-gradient-success text-white font-semibold shadow-card hover:shadow-fun transform hover:scale-105 transition-all duration-200 rounded-xl",
+        warning: "bg-warning text-warning-foreground hover:bg-warning/90 font-semibold",
       },
       size: {
         default: "h-10 px-4 py-2",
