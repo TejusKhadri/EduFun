@@ -58,7 +58,16 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Also refresh when component mounts or userId changes
+    const intervalId = setInterval(() => {
+      fetchPortfolioData();
+    }, 5000); // Refresh every 5 seconds to catch new purchases
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(intervalId);
+    };
   }, [userId]);
 
   const fetchPortfolioData = async () => {
@@ -71,7 +80,6 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
 
       if (error) throw error;
 
-      console.log('Portfolio data fetched:', data); // Debug log
       setHoldings(data || []);
       calculatePortfolioStats(data || []);
     } catch (error) {
