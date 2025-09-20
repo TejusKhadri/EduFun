@@ -22,9 +22,9 @@ export function HeroSection() {
               <span className="text-primary">The Fun Way</span>
             </h1>
             
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xl text-foreground max-w-2xl mx-auto leading-relaxed font-medium">
               Master investing with virtual coins in a safe, interactive environment. 
-              Build financial confidence through gamified learning.
+              Trade real stocks with live market data and build financial confidence through gamified learning.
             </p>
           </div>
 
@@ -63,8 +63,9 @@ export function HeroSection() {
                   <Coins className="w-8 h-8 text-accent-green" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground">Virtual Trading</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  Start with $10,000 virtual money to practice trading without any financial risk.
+                <p className="text-foreground leading-relaxed">
+                  Start with $10,000 virtual money to practice trading real stocks without any financial risk.
+                  Learn market dynamics safely.
                 </p>
               </div>
             </Card>
@@ -76,8 +77,9 @@ export function HeroSection() {
                   <TrendingUp className="w-8 h-8 text-accent-blue" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground">Real Market Data</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  Learn with live stock prices and market movements in a safe environment.
+                <p className="text-foreground leading-relaxed">
+                  Trade with live stock prices from Apple, Tesla, Disney and more. 
+                  Experience real market movements in a safe learning environment.
                 </p>
               </div>
             </Card>
@@ -89,8 +91,9 @@ export function HeroSection() {
                   <BookOpen className="w-8 h-8 text-accent-purple" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground">Interactive Learning</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  Gamified courses with AR/VR experiences designed for young learners.
+                <p className="text-foreground leading-relaxed">
+                  Gamified courses with real-world trading scenarios. 
+                  Compete on leaderboards and earn achievements as you learn.
                 </p>
               </div>
             </Card>
