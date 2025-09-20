@@ -14,6 +14,164 @@ export type Database = {
   }
   public: {
     Tables: {
+      comment_votes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          user_id: string
+          vote_type: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+          vote_type: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_votes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_badges: {
+        Row: {
+          badge_description: string
+          badge_icon: string
+          badge_name: string
+          badge_type: string
+          created_at: string
+          id: string
+          points_required: number
+          requirements: Json
+        }
+        Insert: {
+          badge_description: string
+          badge_icon: string
+          badge_name: string
+          badge_type: string
+          created_at?: string
+          id?: string
+          points_required?: number
+          requirements: Json
+        }
+        Update: {
+          badge_description?: string
+          badge_icon?: string
+          badge_name?: string
+          badge_type?: string
+          created_at?: string
+          id?: string
+          points_required?: number
+          requirements?: Json
+        }
+        Relationships: []
+      }
+      discussion_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_hidden: boolean
+          parent_comment_id: string | null
+          post_id: string
+          updated_at: string
+          upvotes: number
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+          parent_comment_id?: string | null
+          post_id: string
+          updated_at?: string
+          upvotes?: number
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+          parent_comment_id?: string | null
+          post_id?: string
+          updated_at?: string
+          upvotes?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discussion_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discussion_posts: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          is_hidden: boolean
+          is_pinned: boolean
+          tags: string[] | null
+          title: string
+          updated_at: string
+          upvotes: number
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          content: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+          is_pinned?: boolean
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          upvotes?: number
+          user_id: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+          is_pinned?: boolean
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          upvotes?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       learning_progress: {
         Row: {
           coins_earned: number
@@ -38,6 +196,42 @@ export type Database = {
           module_id?: string
           module_title?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      moderation_reports: {
+        Row: {
+          created_at: string
+          id: string
+          moderator_user_id: string | null
+          reason: string
+          reported_content_id: string
+          reported_content_type: string
+          reporter_user_id: string
+          resolved_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          moderator_user_id?: string | null
+          reason: string
+          reported_content_id: string
+          reported_content_type: string
+          reporter_user_id: string
+          resolved_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          moderator_user_id?: string | null
+          reason?: string
+          reported_content_id?: string
+          reported_content_type?: string
+          reporter_user_id?: string
+          resolved_at?: string | null
+          status?: string
         }
         Relationships: []
       }
@@ -109,6 +303,38 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      post_votes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+          vote_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+          vote_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+          vote_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_votes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -212,12 +438,78 @@ export type Database = {
         }
         Relationships: []
       }
+      user_community_badges: {
+        Row: {
+          badge_type: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_type: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_type?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_community_badges_badge_type_fkey"
+            columns: ["badge_type"]
+            isOneToOne: false
+            referencedRelation: "community_badges"
+            referencedColumns: ["badge_type"]
+          },
+        ]
+      }
+      user_reputation: {
+        Row: {
+          comments_count: number
+          created_at: string
+          helpful_votes_received: number
+          id: string
+          posts_count: number
+          reputation_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comments_count?: number
+          created_at?: string
+          helpful_votes_received?: number
+          id?: string
+          posts_count?: number
+          reputation_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comments_count?: number
+          created_at?: string
+          helpful_votes_received?: number
+          id?: string
+          posts_count?: number
+          reputation_points?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       check_and_award_achievements: {
+        Args: { user_uuid: string }
+        Returns: undefined
+      }
+      check_and_award_community_badges: {
         Args: { user_uuid: string }
         Returns: undefined
       }
@@ -249,6 +541,10 @@ export type Database = {
           user_group: string
           user_rank: number
         }[]
+      }
+      update_user_reputation_from_votes: {
+        Args: { content_id: string; content_type: string }
+        Returns: undefined
       }
     }
     Enums: {
