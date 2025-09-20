@@ -15,16 +15,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('AuthContext: Initializing auth...');
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('AuthContext: Auth state changed', { event, user: session?.user?.email });
         setUser(session?.user ?? null);
         setLoading(false);
       }
     );
 
     // THEN check for existing session (this will process OAuth callbacks)
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log('AuthContext: Got session', { user: session?.user?.email, error });
       setUser(session?.user ?? null);
       setLoading(false);
     });
