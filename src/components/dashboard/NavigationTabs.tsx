@@ -1,4 +1,4 @@
-type TabType = 'market' | 'portfolio' | 'learn' | 'leaderboard';
+type TabType = 'market' | 'portfolio' | 'learn' | 'leaderboard' | 'settings';
 
 interface NavigationTabsProps {
   activeTab: TabType;
@@ -11,6 +11,7 @@ export function NavigationTabs({ activeTab, onTabChange }: NavigationTabsProps) 
     { id: 'portfolio', label: 'Portfolio' },
     { id: 'learn', label: 'Learn' },
     { id: 'leaderboard', label: 'Leaderboard' },
+    { id: 'settings', label: 'Settings' },
   ] as const;
 
   return (

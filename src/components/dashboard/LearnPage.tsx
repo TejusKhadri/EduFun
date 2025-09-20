@@ -97,13 +97,13 @@ export function LearnPage({ onEarnCoins, userId }: LearnPageProps) {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'Beginner':
-        return 'bg-accent-green text-white';
+        return 'bg-green-500 text-white';
       case 'Intermediate':
-        return 'bg-amber-400 text-black';
+        return 'bg-amber-500 text-white';
       case 'Advanced':
-        return 'bg-destructive text-white';
+        return 'bg-red-500 text-white';
       default:
-        return 'bg-muted text-muted-foreground';
+        return 'bg-gray-500 text-white';
     }
   };
 
@@ -166,7 +166,7 @@ export function LearnPage({ onEarnCoins, userId }: LearnPageProps) {
                     <Button
                       onClick={() => handleStartModule(module)}
                       disabled={isCompleted}
-                      className={isCompleted ? 'bg-accent-green hover:bg-accent-green' : ''}
+                      className={isCompleted ? 'bg-green-500 hover:bg-green-500' : ''}
                     >
                       {isCompleted ? (
                         'Completed'

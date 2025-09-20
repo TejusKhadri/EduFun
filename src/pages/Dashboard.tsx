@@ -7,10 +7,11 @@ import { MarketPage } from '@/components/dashboard/MarketPage';
 import { PortfolioPage } from '@/components/dashboard/PortfolioPage';
 import { LearnPage } from '@/components/dashboard/LearnPage';
 import { LeaderboardPage } from '@/components/dashboard/LeaderboardPage';
+import { SettingsPage } from '@/components/dashboard/SettingsPage';
 import { BuyCoinsDialog } from '@/components/dashboard/BuyCoinsDialog';
 import { supabase } from '@/integrations/supabase/client';
 
-type TabType = 'market' | 'portfolio' | 'learn' | 'leaderboard';
+type TabType = 'market' | 'portfolio' | 'learn' | 'leaderboard' | 'settings';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
@@ -112,6 +113,9 @@ const Dashboard = () => {
           )}
           {activeTab === 'leaderboard' && (
             <LeaderboardPage userId={user.id} />
+          )}
+          {activeTab === 'settings' && (
+            <SettingsPage userId={user.id} />
           )}
         </div>
       </div>
