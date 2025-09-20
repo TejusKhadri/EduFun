@@ -9,16 +9,18 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md transition-all duration-200",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        outline: "border border-input bg-background hover:bg-muted hover:text-foreground shadow-sm hover:shadow-md transition-all duration-200",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+        ghost: "hover:bg-muted hover:text-foreground transition-colors duration-200",
         link: "text-primary underline-offset-4 hover:underline",
-        eduplay: "bg-gradient-fun text-white font-bold shadow-fun hover:shadow-glow transform hover:scale-105 transition-all duration-300 rounded-xl",
-        google: "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-card hover:shadow-fun transition-all duration-200",
-        fun: "bg-gradient-success text-white font-semibold shadow-card hover:shadow-fun transform hover:scale-105 transition-all duration-200 rounded-xl",
-        warning: "bg-warning text-warning-foreground hover:bg-warning/90 font-semibold",
+        // Clean, interactive variants inspired by Canva design
+        orange: "bg-accent-orange text-white hover:bg-accent-orange/90 shadow-sm hover:shadow-md transition-all duration-200",
+        green: "bg-accent-green text-white hover:bg-accent-green/90 shadow-sm hover:shadow-md transition-all duration-200",
+        pink: "bg-accent-pink text-white hover:bg-accent-pink/90 shadow-sm hover:shadow-md transition-all duration-200",
+        purple: "bg-accent-purple text-white hover:bg-accent-purple/90 shadow-sm hover:shadow-md transition-all duration-200",
+        interactive: "bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary/20 shadow-sm hover:shadow-interactive transition-all duration-200",
       },
       size: {
         default: "h-10 px-4 py-2",

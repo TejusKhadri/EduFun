@@ -82,7 +82,7 @@ export function AuthDialog({ trigger, defaultMode = "signin" }: AuthDialogProps)
               </div>
             )}
 
-            <Button type="submit" variant="eduplay" className="w-full">
+            <Button type="submit" variant="interactive" className="w-full">
               {mode === "signin" ? "Sign In" : "Sign Up"}
             </Button>
           </form>
@@ -100,7 +100,7 @@ export function AuthDialog({ trigger, defaultMode = "signin" }: AuthDialogProps)
 
           <Button
             type="button"
-            variant="google"
+            variant="outline"
             className="w-full"
             onClick={handleGoogleAuth}
           >

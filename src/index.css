@@ -8,50 +8,48 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 243 244 255;
-    --foreground: 51 65 85;
+    /* Clean minimalistic palette */
+    --background: 255 255 255;
+    --foreground: 15 23 42;
 
     --card: 255 255 255;
-    --card-foreground: 51 65 85;
+    --card-foreground: 15 23 42;
 
     --popover: 255 255 255;
-    --popover-foreground: 51 65 85;
+    --popover-foreground: 15 23 42;
 
-    --primary: 99 102 241;
+    /* Vibrant but clean primary colors */
+    --primary: 59 130 246;
     --primary-foreground: 255 255 255;
-    --primary-glow: 129 140 248;
 
-    --secondary: 251 113 133;
-    --secondary-foreground: 255 255 255;
+    --secondary: 241 245 249;
+    --secondary-foreground: 51 65 85;
 
     --muted: 248 250 252;
     --muted-foreground: 100 116 139;
 
-    --accent: 34 197 94;
-    --accent-foreground: 255 255 255;
-
-    --warning: 251 191 36;
-    --warning-foreground: 120 53 15;
+    /* Interactive accent colors inspired by your Canva design */
+    --accent-orange: 251 146 60;
+    --accent-green: 34 197 94;
+    --accent-pink: 236 72 153;
+    --accent-blue: 59 130 246;
+    --accent-purple: 147 51 234;
+    --accent-yellow: 234 179 8;
 
     --destructive: 239 68 68;
-    --destructive-foreground: 248 250 252;
+    --destructive-foreground: 255 255 255;
 
     --border: 226 232 240;
     --input: 241 245 249;
-    --ring: 99 102 241;
+    --ring: 59 130 246;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Kid-friendly gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-fun: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
-    --gradient-success: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary-glow)));
-    --gradient-card: linear-gradient(145deg, rgba(255,255,255,0.8), rgba(255,255,255,0.4));
-
-    /* Shadows for depth */
-    --shadow-fun: 0 10px 30px -5px hsl(var(--primary) / 0.3);
-    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.4);
-    --shadow-card: 0 4px 20px -2px hsl(var(--primary) / 0.1);
+    /* Clean shadows for depth */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-interactive: 0 0 0 3px hsl(var(--primary) / 0.1);
 
     --radius: 0.5rem;
 
@@ -74,16 +72,16 @@ All colors MUST be HSL.
 
   .dark {
     --background: 15 23 42;
-    --foreground: 241 245 249;
+    --foreground: 248 250 252;
 
     --card: 30 41 59;
-    --card-foreground: 241 245 249;
+    --card-foreground: 248 250 252;
 
     --popover: 30 41 59;
-    --popover-foreground: 241 245 249;
+    --popover-foreground: 248 250 252;
 
     --primary: 59 130 246;
-    --primary-foreground: 15 23 42;
+    --primary-foreground: 255 255 255;
 
     --secondary: 51 65 85;
     --secondary-foreground: 226 232 240;
@@ -91,11 +89,15 @@ All colors MUST be HSL.
     --muted: 51 65 85;
     --muted-foreground: 148 163 184;
 
-    --accent: 34 197 94;
-    --accent-foreground: 15 23 42;
+    --accent-orange: 251 146 60;
+    --accent-green: 34 197 94;
+    --accent-pink: 236 72 153;
+    --accent-blue: 59 130 246;
+    --accent-purple: 147 51 234;
+    --accent-yellow: 234 179 8;
 
     --destructive: 239 68 68;
-    --destructive-foreground: 241 245 249;
+    --destructive-foreground: 248 250 252;
 
     --border: 51 65 85;
     --input: 51 65 85;
