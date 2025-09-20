@@ -60,18 +60,37 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
   const loadInitialStocks = async () => {
     try {
       setLoading(true);
-      // Load trending stocks first for faster display
+      // Load Indian market indices and trending stocks
       const trendingQuotes = await stockAPI.getTrendingStocks();
       
-      const stockData = trendingQuotes.map(quote => ({
-        symbol: quote.symbol,
-        name: quote.name,
-        price: quote.price,
-        change: quote.change,
-        changePercent: quote.changePercent,
-        sector: quote.sector || 'Technology',
-        description: stockAPI.getStockDescription(quote.symbol)
-      }));
+      // Add mock Indian indices data
+      const indianIndices = [
+        { symbol: 'NIFTY', name: 'Nifty 50', price: 25327.05, change: -96.55, changePercent: -0.38, volume: 0, sector: 'Index' },
+        { symbol: 'SENSEX', name: 'Sensex', price: 82626.23, change: -387.73, changePercent: -0.47, volume: 0, sector: 'Index' },
+        { symbol: 'BANKNIFTY', name: 'Bank Nifty', price: 55458.85, change: -268.60, changePercent: -0.48, volume: 0, sector: 'Index' }
+      ];
+      
+      // Combine indices with regular stocks
+      const stockData = [
+        ...indianIndices.map(index => ({
+          symbol: index.symbol,
+          name: index.name,
+          price: index.price,
+          change: index.change,
+          changePercent: index.changePercent,
+          sector: index.sector,
+          description: `Indian stock market ${index.name} index`
+        })),
+        ...trendingQuotes.slice(0, 5).map(quote => ({
+          symbol: quote.symbol,
+          name: quote.name,
+          price: quote.price,
+          change: quote.change,
+          changePercent: quote.changePercent,
+          sector: quote.sector || 'Technology',
+          description: stockAPI.getStockDescription(quote.symbol)
+        }))
+      ];
 
       setStocks(stockData);
     } catch (error) {
@@ -368,10 +387,10 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
                 <Button
                   onClick={() => handleBuyStock(stock)}
                   className="w-full bg-amber-400 hover:bg-amber-500 text-black font-semibold"
-                  disabled={Math.floor(stock.price) > virtualCoins}
+                  disabled={Math.floor(stock.price) > virtualCoins || stock.sector === 'Index'}
                 >
                   <ShoppingCart className="w-4 h-4 mr-2" />
-                  Buy 1 Share - {Math.floor(stock.price)} coins
+                  {stock.sector === 'Index' ? 'Market Index' : `Buy 1 Share - ${Math.floor(stock.price)} coins`}
                 </Button>
               </CardContent>
             </Card>
