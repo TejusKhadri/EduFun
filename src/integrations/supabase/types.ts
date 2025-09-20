@@ -41,6 +41,36 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_history: {
+        Row: {
+          created_at: string
+          id: string
+          portfolio_value: number
+          rank_position: number | null
+          recorded_at: string
+          total_returns: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          portfolio_value?: number
+          rank_position?: number | null
+          recorded_at?: string
+          total_returns?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          portfolio_value?: number
+          rank_position?: number | null
+          recorded_at?: string
+          total_returns?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       portfolios: {
         Row: {
           buy_price: number
@@ -155,11 +185,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achievement_name: string
+          achievement_type: string
+          earned_at: string
+          id: string
+          is_active: boolean
+          user_id: string
+        }
+        Insert: {
+          achievement_name: string
+          achievement_type: string
+          earned_at?: string
+          id?: string
+          is_active?: boolean
+          user_id: string
+        }
+        Update: {
+          achievement_name?: string
+          achievement_type?: string
+          earned_at?: string
+          id?: string
+          is_active?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      check_and_award_achievements: {
+        Args: { user_uuid: string }
+        Returns: undefined
+      }
       get_leaderboard_data: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -168,6 +229,15 @@ export type Database = {
           total_portfolio_value: number
           total_returns: number
           user_group: string
+        }[]
+      }
+      get_user_performance_history: {
+        Args: { days_back?: number; user_uuid: string }
+        Returns: {
+          date: string
+          portfolio_value: number
+          rank_position: number
+          total_returns: number
         }[]
       }
       get_user_rank: {
