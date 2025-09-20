@@ -88,6 +88,7 @@ const Dashboard = () => {
             virtualCoins={virtualCoins} 
             onBuyCoins={() => setShowBuyCoinsDialog(true)}
             onSettingsClick={() => setShowSettings(true)}
+            userProfile={profile}
           />
           
           <BuyCoinsDialog
