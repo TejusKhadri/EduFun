@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { User, Lock, Mail, UserCircle, LogOut } from 'lucide-react';
+import { User, Lock, Mail, UserCircle, LogOut, Camera } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ProfilePictureSelector } from './ProfilePictureSelector';
 
 interface SettingsPageProps {
   userId: string;
@@ -113,6 +114,15 @@ export function SettingsPage({ userId }: SettingsPageProps) {
         <h1 className="text-4xl font-bold text-foreground">Account Settings</h1>
         <p className="text-muted-foreground">Manage your account information and preferences</p>
       </div>
+
+      {/* Profile Picture */}
+      <ProfilePictureSelector
+        currentAvatarUrl={profile?.avatar_url}
+        userId={userId}
+        onAvatarUpdate={(avatarUrl) => {
+          setProfile(prev => ({ ...prev, avatar_url: avatarUrl }));
+        }}
+      />
 
       {/* Account Information */}
       <Card>
