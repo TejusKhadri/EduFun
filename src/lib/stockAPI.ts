@@ -35,20 +35,52 @@ const STOCK_APIS = {
   backup_search: (query: string) => `https://financialmodelingprep.com/api/v3/search?query=${query}&limit=10&apikey=demo`
 };
 
-// Popular kid-friendly stocks for learning
-export const POPULAR_STOCKS = [
-  { symbol: 'AAPL', name: 'Apple Inc.', sector: 'Technology' },
-  { symbol: 'MSFT', name: 'Microsoft Corporation', sector: 'Technology' },
-  { symbol: 'GOOGL', name: 'Alphabet Inc.', sector: 'Technology' },
-  { symbol: 'TSLA', name: 'Tesla, Inc.', sector: 'Automotive' },
-  { symbol: 'DIS', name: 'The Walt Disney Company', sector: 'Entertainment' },
-  { symbol: 'NFLX', name: 'Netflix, Inc.', sector: 'Entertainment' },
-  { symbol: 'AMZN', name: 'Amazon.com, Inc.', sector: 'E-commerce' },
-  { symbol: 'NVDA', name: 'NVIDIA Corporation', sector: 'Technology' },
-  { symbol: 'META', name: 'Meta Platforms, Inc.', sector: 'Technology' },
-  { symbol: 'KO', name: 'The Coca-Cola Company', sector: 'Beverages' },
-  { symbol: 'MCD', name: "McDonald's Corporation", sector: 'Food Service' },
-  { symbol: 'NKE', name: 'Nike, Inc.', sector: 'Apparel' }
+// Comprehensive NYSE stocks for educational investing
+export const NYSE_STOCKS = [
+  // Technology Giants
+  { symbol: 'AAPL', name: 'Apple Inc.', sector: 'Technology', description: 'Makes iPhones, iPads, and Mac computers that kids love!' },
+  { symbol: 'MSFT', name: 'Microsoft Corporation', sector: 'Technology', description: 'Creates Xbox games, Windows computers, and Office!' },
+  { symbol: 'GOOGL', name: 'Alphabet Inc.', sector: 'Technology', description: 'The company behind Google search and YouTube!' },
+  { symbol: 'META', name: 'Meta Platforms, Inc.', sector: 'Technology', description: 'The company that owns Facebook, Instagram, and WhatsApp!' },
+  { symbol: 'NVDA', name: 'NVIDIA Corporation', sector: 'Technology', description: 'Makes powerful computer chips for gaming and AI!' },
+  { symbol: 'AMZN', name: 'Amazon.com, Inc.', sector: 'E-commerce', description: 'The online store where you can buy almost anything!' },
+  
+  // Automotive & Transportation
+  { symbol: 'TSLA', name: 'Tesla, Inc.', sector: 'Automotive', description: 'Makes cool electric cars and rockets through SpaceX!' },
+  { symbol: 'F', name: 'Ford Motor Company', sector: 'Automotive', description: 'One of the oldest car companies in America!' },
+  { symbol: 'GM', name: 'General Motors Company', sector: 'Automotive', description: 'Makes Chevrolet, Cadillac, and other popular cars!' },
+  
+  // Entertainment & Media
+  { symbol: 'DIS', name: 'The Walt Disney Company', sector: 'Entertainment', description: 'Home of Mickey Mouse, Marvel heroes, and Disney movies!' },
+  { symbol: 'NFLX', name: 'Netflix, Inc.', sector: 'Entertainment', description: 'Your favorite streaming service for movies and shows!' },
+  { symbol: 'WMT', name: 'Walmart Inc.', sector: 'Retail', description: 'The biggest retail store in America!' },
+  
+  // Food & Beverages
+  { symbol: 'KO', name: 'The Coca-Cola Company', sector: 'Beverages', description: 'Makes the world\'s most famous soft drinks!' },
+  { symbol: 'PEP', name: 'PepsiCo, Inc.', sector: 'Beverages', description: 'Makes Pepsi, Lay\'s chips, and Gatorade!' },
+  { symbol: 'MCD', name: "McDonald's Corporation", sector: 'Food Service', description: 'The famous golden arches restaurant everyone knows!' },
+  { symbol: 'SBUX', name: 'Starbucks Corporation', sector: 'Food Service', description: 'The popular coffee shop chain with green logo!' },
+  
+  // Sports & Apparel
+  { symbol: 'NKE', name: 'Nike, Inc.', sector: 'Apparel', description: 'Makes the coolest sneakers and sports gear!' },
+  
+  // Financial Services
+  { symbol: 'JPM', name: 'JPMorgan Chase & Co.', sector: 'Financial', description: 'One of the biggest banks in America!' },
+  { symbol: 'BAC', name: 'Bank of America Corporation', sector: 'Financial', description: 'A major bank that helps people save money!' },
+  
+  // Healthcare & Pharmaceuticals
+  { symbol: 'JNJ', name: 'Johnson & Johnson', sector: 'Healthcare', description: 'Makes medicines and band-aids to help people feel better!' },
+  { symbol: 'PFE', name: 'Pfizer Inc.', sector: 'Healthcare', description: 'Creates important medicines and vaccines!' },
+  
+  // Energy & Utilities
+  { symbol: 'XOM', name: 'Exxon Mobil Corporation', sector: 'Energy', description: 'One of the biggest oil and gas companies!' },
+  
+  // Aerospace & Defense
+  { symbol: 'BA', name: 'The Boeing Company', sector: 'Aerospace', description: 'Builds airplanes that fly people around the world!' },
+  
+  // Consumer Goods
+  { symbol: 'PG', name: 'Procter & Gamble Company', sector: 'Consumer Goods', description: 'Makes everyday products like toothpaste and shampoo!' },
+  { symbol: 'UL', name: 'Unilever PLC', sector: 'Consumer Goods', description: 'Makes soap, ice cream, and other household products!' }
 ];
 
 export class StockAPI {
@@ -160,13 +192,18 @@ export class StockAPI {
   }
 
   private getCompanyName(symbol: string): string {
-    const company = POPULAR_STOCKS.find(stock => stock.symbol === symbol.toUpperCase());
+    const company = NYSE_STOCKS.find(stock => stock.symbol === symbol.toUpperCase());
     return company?.name || `${symbol.toUpperCase()} Corporation`;
   }
 
   private getSector(symbol: string): string {
-    const company = POPULAR_STOCKS.find(stock => stock.symbol === symbol.toUpperCase());
+    const company = NYSE_STOCKS.find(stock => stock.symbol === symbol.toUpperCase());
     return company?.sector || 'Technology';
+  }
+
+  getStockDescription(symbol: string): string {
+    const company = NYSE_STOCKS.find(stock => stock.symbol === symbol.toUpperCase());
+    return company?.description || `A great company to learn about investing with ${symbol.toUpperCase()}!`;
   }
 
   async getQuote(symbol: string): Promise<StockQuote> {
@@ -187,11 +224,25 @@ export class StockAPI {
   }
 
   async searchStocks(query: string): Promise<StockSearchResult[]> {
-    // For demo purposes, search within popular stocks
-    const filtered = POPULAR_STOCKS.filter(stock => 
+    if (!query.trim()) {
+      return NYSE_STOCKS.slice(0, 12).map(stock => ({
+        symbol: stock.symbol,
+        name: stock.name,
+        type: 'Equity',
+        region: 'United States',
+        marketOpen: '09:30',
+        marketClose: '16:00',
+        timezone: 'UTC-04',
+        currency: 'USD',
+        matchScore: '1.0000'
+      }));
+    }
+
+    const filtered = NYSE_STOCKS.filter(stock => 
       stock.name.toLowerCase().includes(query.toLowerCase()) ||
       stock.symbol.toLowerCase().includes(query.toLowerCase()) ||
-      stock.sector.toLowerCase().includes(query.toLowerCase())
+      stock.sector.toLowerCase().includes(query.toLowerCase()) ||
+      stock.description.toLowerCase().includes(query.toLowerCase())
     );
 
     return filtered.map(stock => ({
@@ -205,6 +256,11 @@ export class StockAPI {
       currency: 'USD',
       matchScore: '1.0000'
     }));
+  }
+
+  // Get all NYSE stocks
+  getAllNYSEStocks(): typeof NYSE_STOCKS {
+    return NYSE_STOCKS;
   }
 
   // Get market status
@@ -222,7 +278,15 @@ export class StockAPI {
 
   // Get trending stocks for kids
   async getTrendingStocks(): Promise<StockQuote[]> {
-    const trendingSymbols = ['AAPL', 'MSFT', 'GOOGL', 'TSLA', 'DIS', 'NFLX'];
+    const trendingSymbols = ['AAPL', 'MSFT', 'GOOGL', 'TSLA', 'DIS', 'NFLX', 'AMZN', 'META'];
     return this.getMultipleQuotes(trendingSymbols);
+  }
+
+  // Get stocks by sector
+  async getStocksBySector(sector: string): Promise<StockQuote[]> {
+    const stocksInSector = NYSE_STOCKS
+      .filter(stock => stock.sector.toLowerCase() === sector.toLowerCase())
+      .map(stock => stock.symbol);
+    return this.getMultipleQuotes(stocksInSector);
   }
 }

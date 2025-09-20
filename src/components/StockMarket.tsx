@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useStockData, useStockQuote } from '@/hooks/useStockData';
-import { POPULAR_STOCKS } from '@/lib/stockAPI';
+import { NYSE_STOCKS } from '@/lib/stockAPI';
 import { TrendingUp, TrendingDown, Search, Coins } from 'lucide-react';
 
 interface StockMarketProps {
@@ -31,7 +31,7 @@ export function StockMarket({ onBuyStock, virtualCoins = 10000 }: StockMarketPro
     }
   };
 
-  const filteredStocks = POPULAR_STOCKS.filter(stock =>
+  const filteredStocks = NYSE_STOCKS.filter(stock =>
     stock.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     stock.symbol.toLowerCase().includes(searchQuery.toLowerCase())
   );
