@@ -14,65 +14,55 @@ interface AppHeaderProps {
 
 export function AppHeader({ virtualCoins, onBuyCoins, onSettingsClick, userProfile }: AppHeaderProps) {
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Logo and Title */}
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-            <TrendingUp className="w-6 h-6 text-white" />
+    <header className="gradient-bg-primary p-6 text-white">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* Brand & User */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="text-3xl animate-bounce-gentle">🌟</div>
+            <div>
+              <h1 className="text-2xl font-fun font-bold">StockStars</h1>
+              <p className="text-sm opacity-90">Learning Made Fun!</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">EduPlay Market</h1>
-            <p className="text-sm text-muted-foreground">Learn investing with virtual coins!</p>
+          
+          <div className="flex items-center gap-3 bg-white/20 rounded-full px-4 py-2">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={userProfile?.avatar_url} />
+              <AvatarFallback className="bg-white/30">
+                <User className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+            <span className="font-medium">
+              {userProfile?.display_name || 'Young Investor'}
+            </span>
           </div>
         </div>
 
-        {/* User Info and Actions */}
+        {/* Coins & Actions */}
         <div className="flex items-center gap-4">
-          {/* User Profile */}
-          <div className="flex items-center gap-3">
-            <Avatar className="w-8 h-8">
-              <AvatarImage src={userProfile?.avatar_url} alt="Profile picture" />
-              <AvatarFallback>
-                <User className="w-4 h-4" />
-              </AvatarFallback>
-            </Avatar>
-            <div className="hidden sm:block">
-              <p className="text-sm font-medium text-foreground">
-                {userProfile?.display_name || 'User'}
-              </p>
-            </div>
-          </div>
-
-          {/* Virtual Coins Display */}
-          <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2">
-            <div className="w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center">
-              <Coins className="w-4 h-4 text-white" />
-            </div>
+          <div className="flex items-center gap-3 bg-white/20 rounded-lg px-4 py-3">
+            <Coins className="h-6 w-6 text-warning animate-pulse-glow" />
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-foreground">{virtualCoins.toLocaleString()}</span>
-                <span className="text-sm text-muted-foreground hidden sm:inline">Virtual Coins</span>
-              </div>
+              <div className="text-2xl font-bold">{virtualCoins.toLocaleString()}</div>
+              <div className="text-xs opacity-90">Virtual Coins</div>
             </div>
           </div>
           
           <Button
             onClick={onBuyCoins}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
+            className="bg-warning text-warning-foreground hover:bg-warning/90 font-medium"
           >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Buy Coins</span>
+            Get More Coins! 💰
           </Button>
           
-          <Button 
-            variant="ghost" 
-            size="sm"
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onSettingsClick}
+            className="text-white hover:bg-white/20"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="h-5 w-5" />
           </Button>
         </div>
       </div>

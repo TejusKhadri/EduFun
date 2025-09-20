@@ -228,18 +228,18 @@ export const CommunityPage: React.FC<CommunityPageProps> = ({ userId }) => {
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <MessageSquare className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <MessageSquare className="h-7 w-7 text-primary animate-pulse-glow" />
+            <h1 className="text-3xl font-fun title-gradient">
               Community Discussion
             </h1>
           </div>
-          <p className="text-muted-foreground">
-            Share ideas, ask questions, and learn from fellow young investors! 🚀
+          <p className="text-lg text-muted-foreground font-medium">
+            Share ideas, ask questions, and learn from fellow young investors! 🚀✨
           </p>
         </div>
         <Button 
           onClick={() => setShowCreatePost(true)}
-          className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+          className="gradient-bg-success text-white hover:opacity-90 font-medium px-6 py-3"
         >
           📝 Start Discussion
         </Button>

@@ -83,7 +83,8 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["Nunito", "Inter", "system-ui", "sans-serif"],
+        display: ["Fredoka", "Inter", "system-ui", "sans-serif"],
+        fun: ["Fredoka", "system-ui", "sans-serif"],
       },
       boxShadow: {
         "sm": "var(--shadow-sm)",

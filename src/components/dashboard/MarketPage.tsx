@@ -405,9 +405,9 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
         {/* Your Balance Card */}
         <Card className="max-w-sm mx-auto hover-scale bg-gradient-to-br from-primary/10 to-secondary/10">
           <CardContent className="p-6 text-center">
-            <div className="text-2xl font-bold text-primary mb-1">💰</div>
-            <div className="text-2xl font-bold">{virtualCoins.toLocaleString()}</div>
-            <div className="text-sm text-muted-foreground">Your Virtual Coins</div>
+            <div className="text-3xl font-bold mb-1">💰</div>
+            <div className="text-3xl font-bold">{virtualCoins.toLocaleString()}</div>
+            <div className="text-sm opacity-90">Your Virtual Coins</div>
           </CardContent>
         </Card>
       </div>
@@ -526,11 +526,11 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
                   <div className="flex gap-2">
                     <Button
                       onClick={() => handleBuyClick(stock)}
-                      className="flex-1 bg-gradient-to-r from-success to-success/80 hover:from-success/90 hover:to-success/70"
+                      className="flex-1 gradient-bg-success text-white hover:opacity-90 font-medium"
                       disabled={Math.floor(stock.price) > virtualCoins}
                     >
                       <ShoppingCart className="w-4 h-4 mr-1" />
-                      Buy
+                      Buy Now! 🚀
                     </Button>
                     <Button
                       variant="outline"
