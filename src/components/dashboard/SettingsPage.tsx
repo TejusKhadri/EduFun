@@ -12,9 +12,10 @@ import { AvatarSelector } from './AvatarSelector';
 
 interface SettingsPageProps {
   userId: string;
+  onProfileUpdate?: (profile: any) => void;
 }
 
-export function SettingsPage({ userId }: SettingsPageProps) {
+export function SettingsPage({ userId, onProfileUpdate }: SettingsPageProps) {
   const { user, signOut } = useAuth();
   const [displayName, setDisplayName] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
@@ -33,11 +34,13 @@ export function SettingsPage({ userId }: SettingsPageProps) {
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (data) {
         setProfile(data);
         setDisplayName(data.display_name || '');
+      } else if (error) {
+        console.error('Error fetching profile:', error);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -120,7 +123,9 @@ export function SettingsPage({ userId }: SettingsPageProps) {
         currentAvatarUrl={profile?.avatar_url}
         userId={userId}
         onAvatarUpdate={(avatarUrl) => {
-          setProfile(prev => ({ ...prev, avatar_url: avatarUrl }));
+          const updatedProfile = { ...profile, avatar_url: avatarUrl };
+          setProfile(updatedProfile);
+          onProfileUpdate?.(updatedProfile);
         }}
       />
 

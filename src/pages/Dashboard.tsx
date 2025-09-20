@@ -36,11 +36,13 @@ const Dashboard = () => {
       .from('profiles')
       .select('*')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (data) {
       setProfile(data);
       setVirtualCoins(data.virtual_coins || 16419);
+    } else if (error) {
+      console.error('Error fetching profile:', error);
     }
   };
 
@@ -144,7 +146,10 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="max-w-7xl mx-auto px-6 py-8">
-            <SettingsPage userId={user.id} />
+            <SettingsPage 
+              userId={user.id} 
+              onProfileUpdate={(updatedProfile) => setProfile(updatedProfile)}
+            />
           </div>
         </div>
       )}
