@@ -164,11 +164,20 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           display_name: string
-          id: string
+          rank_position: number
           total_portfolio_value: number
           total_returns: number
           user_group: string
-          virtual_coins: number
+        }[]
+      }
+      get_user_rank: {
+        Args: { user_uuid: string }
+        Returns: {
+          display_name: string
+          total_portfolio_value: number
+          total_returns: number
+          user_group: string
+          user_rank: number
         }[]
       }
     }
