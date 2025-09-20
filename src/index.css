@@ -39,22 +39,40 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
 
-    --radius: 0.5rem;
+    /* Gamified colors for kids */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 98%;
+    
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 98%;
+    
+    --gold: 45 93% 58%;
+    --gold-foreground: 0 0% 0%;
+    
+    --silver: 0 0% 75%;
+    --silver-foreground: 0 0% 0%;
+    
+    --bronze: 25 75% 47%;
+    --bronze-foreground: 0 0% 98%;
+    
+    /* Fun gradient backgrounds */
+    --gradient-rainbow: linear-gradient(135deg, hsl(199 89% 48%), hsl(282 83% 51%), hsl(348 83% 58%), hsl(45 93% 58%));
+    --gradient-winner: linear-gradient(135deg, hsl(45 93% 58%), hsl(38 92% 50%));
+    --gradient-podium: linear-gradient(135deg, hsl(142 76% 36%), hsl(199 89% 48%));
+    
+    /* Animation classes */
+    --bounce-duration: 0.6s;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -127,5 +145,99 @@ All colors MUST be HSL.
 
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-primary/50;
+  }
+}
+
+@layer components {
+  /* Gamified animations */
+  .animate-bounce-gentle {
+    animation: bounce-gentle 2s infinite;
+  }
+  
+  .animate-pulse-glow {
+    animation: pulse-glow 2s infinite;
+  }
+  
+  .animate-slide-up {
+    animation: slide-up 0.5s ease-out;
+  }
+  
+  .animate-trophy-spin {
+    animation: trophy-spin 3s infinite;
+  }
+  
+  .gradient-text {
+    background: var(--gradient-rainbow);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .gradient-bg-winner {
+    background: var(--gradient-winner);
+  }
+  
+  .gradient-bg-podium {
+    background: var(--gradient-podium);
+  }
+  
+  /* Badge styles */
+  .badge-gold {
+    background: hsl(var(--gold));
+    color: hsl(var(--gold-foreground));
+  }
+  
+  .badge-silver {
+    background: hsl(var(--silver));
+    color: hsl(var(--silver-foreground));
+  }
+  
+  .badge-bronze {
+    background: hsl(var(--bronze));
+    color: hsl(var(--bronze-foreground));
+  }
+}
+
+@keyframes bounce-gentle {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px hsl(var(--primary) / 0.6);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes trophy-spin {
+  0% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(180deg);
+  }
+  100% {
+    transform: rotateY(360deg);
   }
 }

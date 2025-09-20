@@ -43,7 +43,32 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Colorful accent palette inspired by Canva design
+        // Gamified colors for kids
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
+        gold: {
+          DEFAULT: "hsl(var(--gold))",
+          foreground: "hsl(var(--gold-foreground))",
+        },
+        silver: {
+          DEFAULT: "hsl(var(--silver))",
+          foreground: "hsl(var(--silver-foreground))",
+        },
+        bronze: {
+          DEFAULT: "hsl(var(--bronze))",
+          foreground: "hsl(var(--bronze-foreground))",
+        },
+        // Colorful accent palette
         "accent-orange": "hsl(var(--accent-orange))",
         "accent-green": "hsl(var(--accent-green))",
         "accent-pink": "hsl(var(--accent-pink))",
