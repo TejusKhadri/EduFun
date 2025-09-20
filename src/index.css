@@ -8,47 +8,36 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* High contrast minimalistic palette for better readability */
-    --background: 255 255 255;
-    --foreground: 15 23 42; /* Dark blue-gray for maximum contrast */
+    /* High contrast colors - using proper HSL values */
+    --background: 0 0% 100%;
+    --foreground: 222 84% 5%;
 
-    --card: 255 255 255;
-    --card-foreground: 15 23 42; /* Dark text on white cards */
+    --card: 0 0% 100%;
+    --card-foreground: 222 84% 5%;
 
-    --popover: 255 255 255;
-    --popover-foreground: 15 23 42;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 84% 5%;
 
-    /* Primary colors with high contrast */
-    --primary: 37 99 235; /* Strong blue */
-    --primary-foreground: 255 255 255;
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 241 245 249; /* Light gray background */
-    --secondary-foreground: 15 23 42; /* Dark text */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 248 250 252; /* Very light gray */
-    --muted-foreground: 71 85 105; /* Medium gray for readable secondary text */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    /* Colorful accents for interactive elements */
-    --accent-orange: 234 88 12; /* Darker orange for better contrast */
-    --accent-green: 22 163 74; /* Darker green */
-    --accent-pink: 219 39 119; /* Darker pink */
-    --accent-blue: 37 99 235; /* Strong blue */
-    --accent-purple: 126 34 206; /* Darker purple */
-    --accent-yellow: 202 138 4; /* Darker yellow */
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 220 38 38; /* Darker red */
-    --destructive-foreground: 255 255 255;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 226 232 240;
-    --input: 241 245 249;
-    --ring: 37 99 235;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
 
     --radius: 0.5rem;
-
-    /* Clean shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 
     --radius: 0.5rem;
 
@@ -70,37 +59,33 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 15 23 42;
-    --foreground: 248 250 252;
+    --background: 222 84% 5%;
+    --foreground: 0 0% 98%;
 
-    --card: 30 41 59;
-    --card-foreground: 248 250 252;
+    --card: 222 84% 5%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 30 41 59;
-    --popover-foreground: 248 250 252;
+    --popover: 222 84% 5%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 59 130 246;
-    --primary-foreground: 255 255 255;
+    --primary: 0 0% 98%;
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 51 65 85;
-    --secondary-foreground: 226 232 240;
+    --secondary: 217 33% 18%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 51 65 85;
-    --muted-foreground: 148 163 184;
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent-orange: 251 146 60;
-    --accent-green: 34 197 94;
-    --accent-pink: 236 72 153;
-    --accent-blue: 59 130 246;
-    --accent-purple: 147 51 234;
-    --accent-yellow: 234 179 8;
+    --accent: 217 33% 18%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 239 68 68;
-    --destructive-foreground: 248 250 252;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 51 65 85;
-    --input: 51 65 85;
-    --ring: 59 130 246;
+    --border: 217 33% 18%;
+    --input: 217 33% 18%;
+    --ring: 212 27% 84%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
