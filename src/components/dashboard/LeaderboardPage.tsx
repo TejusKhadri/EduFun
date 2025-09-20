@@ -9,9 +9,8 @@ interface LeaderboardPageProps {
 }
 
 interface LeaderboardEntry {
-  id: string;
+  rank_position: number;
   display_name: string;
-  virtual_coins: number;
   total_portfolio_value: number;
   total_returns: number;
   user_group: string;
@@ -26,15 +25,25 @@ interface UserStats {
   user_group: string;
 }
 
+interface UserRank {
+  user_rank: number;
+  display_name: string;
+  total_portfolio_value: number;
+  total_returns: number;
+  user_group: string;
+}
+
 export function LeaderboardPage({ userId }: LeaderboardPageProps) {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [userRank, setUserRank] = useState<UserRank | null>(null);
   const [activeView, setActiveView] = useState<'global' | 'group'>('global');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchLeaderboardData();
     fetchUserStats();
+    fetchUserRank();
   }, [userId]);
 
   const fetchLeaderboardData = async () => {
@@ -54,7 +63,7 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       setUserStats(data || null);
@@ -62,6 +71,17 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
       console.error('Error fetching user stats:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserRank = async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_user_rank', { user_uuid: userId });
+      
+      if (error) throw error;
+      setUserRank(data?.[0] || null);
+    } catch (error) {
+      console.error('Error fetching user rank:', error);
     }
   };
 
@@ -109,10 +129,10 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
                 <h3 className="font-semibold">Your Rank</h3>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold">
-                    {userStats ? `1st` : 'Unranked'}
+                    {userRank ? `${userRank.user_rank}${getRankSuffix(userRank.user_rank)}` : 'Unranked'}
                   </span>
-                  {userStats && (
-                    <span className="text-sm opacity-80">Out of {leaderboard.length} players</span>
+                  {userRank && (
+                    <span className="text-sm opacity-80">Out of many players</span>
                   )}
                 </div>
               </div>
@@ -128,7 +148,7 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
                 <h3 className="font-semibold">Group Rank</h3>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold">
-                    {userStats ? `1st` : 'Unranked'}
+                    {userRank ? `${userRank.user_rank}${getRankSuffix(userRank.user_rank)}` : 'Unranked'}
                   </span>
                   <span className="text-sm opacity-80">In {userStats?.user_group || 'Beginners Club'}</span>
                 </div>
@@ -145,7 +165,7 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
                 <h3 className="font-semibold text-foreground">Portfolio Value</h3>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold text-foreground">
-                    {userStats ? `${Math.floor(userStats.total_portfolio_value || 0).toLocaleString()} coins` : '0 coins'}
+                    ${userStats ? `${Math.floor(userStats.total_portfolio_value || 0).toLocaleString()}` : '0.00'}
                   </span>
                   {userStats && (
                     <span className={`text-sm ${(userStats.total_returns || 0) >= 0 ? 'text-accent-green' : 'text-destructive'}`}>
@@ -194,14 +214,14 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
           </div>
 
           <div className="space-y-3">
-            {leaderboard.slice(0, 10).map((entry, index) => (
+            {leaderboard.slice(0, 10).map((entry) => (
               <div
-                key={`${entry.display_name}-${entry.id}`}
+                key={`${entry.display_name}-${entry.rank_position}`}
                 className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
                   <div className="text-2xl w-8 text-center">
-                    {getRankIcon(index + 1)}
+                    {getRankIcon(entry.rank_position)}
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground">{entry.display_name}</h3>
@@ -214,16 +234,13 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
 
                 <div className="text-right">
                   <div className="font-bold text-foreground">
-                    {Math.floor(entry.total_portfolio_value || 0).toLocaleString()} coins
+                    ${Math.floor(entry.total_portfolio_value || 0).toLocaleString()}
                   </div>
                   <div className={`text-sm flex items-center gap-1 ${
                     (entry.total_returns || 0) >= 0 ? 'text-accent-green' : 'text-destructive'
                   }`}>
                     <span>📈</span>
                     <span>{(entry.total_returns || 0) >= 0 ? '+' : ''}{(entry.total_returns || 0).toFixed(1)}%</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {entry.virtual_coins.toLocaleString()} coins
                   </div>
                 </div>
               </div>
