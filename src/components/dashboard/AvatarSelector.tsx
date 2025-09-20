@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,8 +38,13 @@ const DEFAULT_AVATARS = [
 ];
 
 export function AvatarSelector({ currentAvatarUrl, userId, onAvatarUpdate }: AvatarSelectorProps) {
-  const [selectedAvatar, setSelectedAvatar] = useState<string>(currentAvatarUrl || '');
+  const [selectedAvatar, setSelectedAvatar] = useState<string>('');
   const [uploading, setUploading] = useState(false);
+
+  // Update selectedAvatar when currentAvatarUrl changes
+  useEffect(() => {
+    setSelectedAvatar(currentAvatarUrl || '');
+  }, [currentAvatarUrl]);
 
   const handleDefaultAvatarSelect = async (avatarUrl: string) => {
     try {
@@ -58,6 +63,8 @@ export function AvatarSelector({ currentAvatarUrl, userId, onAvatarUpdate }: Ava
     } catch (error) {
       console.error('Error updating avatar:', error);
       toast.error('Failed to update avatar');
+      // Revert selection on error
+      setSelectedAvatar(currentAvatarUrl || '');
     }
   };
 
@@ -137,7 +144,7 @@ export function AvatarSelector({ currentAvatarUrl, userId, onAvatarUpdate }: Ava
 
           {/* Current Avatar Preview */}
           <div className="flex justify-center">
-            <Avatar className="w-24 h-24">
+            <Avatar className="w-24 h-24 border-2 border-border">
               <AvatarImage src={selectedAvatar} alt="Profile picture" />
               <AvatarFallback>
                 <User className="w-12 h-12" />
@@ -151,18 +158,18 @@ export function AvatarSelector({ currentAvatarUrl, userId, onAvatarUpdate }: Ava
             
             {/* Women Avatars */}
             <div className="mb-6">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Women</p>
-              <div className="grid grid-cols-3 gap-3">
+              <p className="text-xs font-medium text-muted-foreground mb-3">Women</p>
+              <div className="grid grid-cols-3 gap-4">
                 {DEFAULT_AVATARS.filter(avatar => avatar.gender === 'Female').map((avatar) => (
                   <div
                     key={avatar.id}
                     className="relative group cursor-pointer"
                     onClick={() => handleDefaultAvatarSelect(avatar.url)}
                   >
-                    <div className={`relative rounded-lg overflow-hidden border-2 transition-colors ${
+                    <div className={`relative rounded-xl overflow-hidden border-2 transition-all duration-200 ${
                       selectedAvatar === avatar.url 
-                        ? 'border-primary shadow-md' 
-                        : 'border-muted hover:border-primary/50'
+                        ? 'border-primary shadow-lg scale-105' 
+                        : 'border-border hover:border-primary/50 hover:scale-[1.02]'
                     }`}>
                       <img 
                         src={avatar.url} 
@@ -170,12 +177,14 @@ export function AvatarSelector({ currentAvatarUrl, userId, onAvatarUpdate }: Ava
                         className="w-full aspect-square object-cover"
                       />
                       {selectedAvatar === avatar.url && (
-                        <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                          <Check className="w-6 h-6 text-primary" />
+                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                          <div className="bg-primary rounded-full p-1">
+                            <Check className="w-4 h-4 text-primary-foreground" />
+                          </div>
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-center mt-1 text-muted-foreground">
+                    <p className="text-xs text-center mt-2 text-muted-foreground font-medium">
                       {avatar.name}
                     </p>
                   </div>
@@ -185,18 +194,18 @@ export function AvatarSelector({ currentAvatarUrl, userId, onAvatarUpdate }: Ava
 
             {/* Men Avatars */}
             <div className="mb-6">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Men</p>
-              <div className="grid grid-cols-3 gap-3">
+              <p className="text-xs font-medium text-muted-foreground mb-3">Men</p>
+              <div className="grid grid-cols-3 gap-4">
                 {DEFAULT_AVATARS.filter(avatar => avatar.gender === 'Male').map((avatar) => (
                   <div
                     key={avatar.id}
                     className="relative group cursor-pointer"
                     onClick={() => handleDefaultAvatarSelect(avatar.url)}
                   >
-                    <div className={`relative rounded-lg overflow-hidden border-2 transition-colors ${
+                    <div className={`relative rounded-xl overflow-hidden border-2 transition-all duration-200 ${
                       selectedAvatar === avatar.url 
-                        ? 'border-primary shadow-md' 
-                        : 'border-muted hover:border-primary/50'
+                        ? 'border-primary shadow-lg scale-105' 
+                        : 'border-border hover:border-primary/50 hover:scale-[1.02]'
                     }`}>
                       <img 
                         src={avatar.url} 
@@ -204,12 +213,14 @@ export function AvatarSelector({ currentAvatarUrl, userId, onAvatarUpdate }: Ava
                         className="w-full aspect-square object-cover"
                       />
                       {selectedAvatar === avatar.url && (
-                        <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                          <Check className="w-6 h-6 text-primary" />
+                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                          <div className="bg-primary rounded-full p-1">
+                            <Check className="w-4 h-4 text-primary-foreground" />
+                          </div>
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-center mt-1 text-muted-foreground">
+                    <p className="text-xs text-center mt-2 text-muted-foreground font-medium">
                       {avatar.name}
                     </p>
                   </div>
@@ -219,18 +230,18 @@ export function AvatarSelector({ currentAvatarUrl, userId, onAvatarUpdate }: Ava
 
             {/* Neutral Avatars */}
             <div>
-              <p className="text-xs font-medium text-muted-foreground mb-2">Neutral</p>
-              <div className="grid grid-cols-2 gap-3">
+              <p className="text-xs font-medium text-muted-foreground mb-3">Neutral</p>
+              <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
                 {DEFAULT_AVATARS.filter(avatar => avatar.gender === 'Neutral').map((avatar) => (
                   <div
                     key={avatar.id}
                     className="relative group cursor-pointer"
                     onClick={() => handleDefaultAvatarSelect(avatar.url)}
                   >
-                    <div className={`relative rounded-lg overflow-hidden border-2 transition-colors ${
+                    <div className={`relative rounded-xl overflow-hidden border-2 transition-all duration-200 ${
                       selectedAvatar === avatar.url 
-                        ? 'border-primary shadow-md' 
-                        : 'border-muted hover:border-primary/50'
+                        ? 'border-primary shadow-lg scale-105' 
+                        : 'border-border hover:border-primary/50 hover:scale-[1.02]'
                     }`}>
                       <img 
                         src={avatar.url} 
@@ -238,12 +249,14 @@ export function AvatarSelector({ currentAvatarUrl, userId, onAvatarUpdate }: Ava
                         className="w-full aspect-square object-cover"
                       />
                       {selectedAvatar === avatar.url && (
-                        <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                          <Check className="w-6 h-6 text-primary" />
+                        <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                          <div className="bg-primary rounded-full p-1">
+                            <Check className="w-4 h-4 text-primary-foreground" />
+                          </div>
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-center mt-1 text-muted-foreground">
+                    <p className="text-xs text-center mt-2 text-muted-foreground font-medium">
                       {avatar.name}
                     </p>
                   </div>
