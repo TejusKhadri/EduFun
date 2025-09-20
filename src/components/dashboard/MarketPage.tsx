@@ -415,12 +415,12 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
       {/* Search and Filters */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary w-5 h-5 z-10" />
           <Input
             placeholder="Search for amazing companies..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-12"
+            className="pl-12 h-14 text-lg bg-card/80 backdrop-blur-sm border-2 border-primary/20 focus:border-primary shadow-lg hover:shadow-xl transition-all duration-300 font-medium placeholder:text-muted-foreground/70"
           />
         </div>
         <Select value={selectedSector} onValueChange={setSelectedSector}>
