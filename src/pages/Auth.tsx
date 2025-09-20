@@ -56,14 +56,19 @@ const Auth = () => {
 
   const handleGoogleAuth = async () => {
     try {
+      // Use the current domain for redirect
+      const redirectUrl = window.location.origin;
+      console.log('Google Auth redirect URL:', redirectUrl);
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.protocol}//${window.location.host}/`,
+          redirectTo: redirectUrl,
         }
       });
       if (error) throw error;
     } catch (error: any) {
+      console.error('Google auth error:', error);
       toast.error(error.message);
     }
   };
