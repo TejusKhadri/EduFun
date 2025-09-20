@@ -78,7 +78,8 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
 
     const totalReturns = currentValue - investedValue;
     const totalReturnsPercent = investedValue > 0 ? (totalReturns / investedValue) * 100 : 0;
-    const oneDayReturns = currentValue * 0.001; // Mock 1D returns
+    // Calculate a more realistic 1D return based on small daily fluctuations
+    const oneDayReturns = currentValue * (Math.random() * 0.02 - 0.01); // -1% to +1% daily change
 
     setPortfolioStats({
       currentValue,
@@ -90,15 +91,12 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 2
-    }).format(amount);
+    // For the educational app, we'll use virtual coins instead of real currency
+    return `${Math.round(amount).toLocaleString()} coins`;
   };
 
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-IN').format(num);
+    return Math.round(num).toLocaleString();
   };
 
   const getReturnColor = (returns: number) => {
@@ -163,7 +161,7 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
             <div>
               <p className="text-sm text-gray-600 mb-1">1D returns</p>
               <p className={`text-lg font-semibold ${getReturnColor(portfolioStats.oneDayReturns)}`}>
-                +{formatCurrency(Math.abs(portfolioStats.oneDayReturns))} ({(portfolioStats.oneDayReturns / portfolioStats.currentValue * 100).toFixed(2)}%)
+                {portfolioStats.oneDayReturns >= 0 ? '+' : ''}{formatCurrency(Math.abs(portfolioStats.oneDayReturns))} ({portfolioStats.currentValue > 0 ? (portfolioStats.oneDayReturns / portfolioStats.currentValue * 100).toFixed(2) : '0.00'}%)
               </p>
             </div>
             
@@ -223,7 +221,7 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
                           <div>
                             <div className="font-medium text-gray-900">{holding.stock_name}</div>
                             <div className="text-sm text-gray-500">
-                              {holding.shares} shares • Avg. ₹{holding.buy_price.toFixed(2)}
+                              {holding.shares} shares • Avg. {Math.round(holding.buy_price)} coins
                             </div>
                           </div>
                         </td>
@@ -235,22 +233,22 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
                           </div>
                         </td>
                         <td className="p-4">
-                          <div className="font-semibold text-gray-900">₹{holding.current_price.toFixed(2)}</div>
+                          <div className="font-semibold text-gray-900">{Math.round(holding.current_price)} coins</div>
                           <div className={`text-sm ${oneDayChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                             {oneDayChange >= 0 ? '+' : ''}{oneDayChange.toFixed(2)} ({Math.abs(oneDayChange).toFixed(2)}%)
                           </div>
                         </td>
                         <td className="p-4">
                           <div className={`font-semibold ${getReturnColor(returns)}`}>
-                            {returns >= 0 ? '+' : ''}₹{Math.abs(returns).toFixed(2)}
+                            {returns >= 0 ? '+' : ''}{Math.round(Math.abs(returns))} coins
                           </div>
                           <div className={`text-sm ${getReturnColor(returns)}`}>
                             {returnsPercent.toFixed(2)}%
                           </div>
                         </td>
                         <td className="p-4">
-                          <div className="font-semibold text-gray-900">₹{currentValue.toFixed(2)}</div>
-                          <div className="text-sm text-gray-500">₹{investedValue.toFixed(2)}</div>
+                          <div className="font-semibold text-gray-900">{Math.round(currentValue)} coins</div>
+                          <div className="text-sm text-gray-500">{Math.round(investedValue)} coins</div>
                         </td>
                       </tr>
                     );
