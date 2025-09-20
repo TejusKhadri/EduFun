@@ -15,6 +15,8 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        eduplay: "bg-gradient-to-r from-primary to-accent text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200",
+        google: "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-md",
       },
       size: {
         default: "h-10 px-4 py-2",
