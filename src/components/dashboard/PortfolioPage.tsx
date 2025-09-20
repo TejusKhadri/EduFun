@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, Eye, BarChart3, ChevronDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, Eye, BarChart3, ChevronDown, Minus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { SellStockDialog } from './SellStockDialog';
 
 interface PortfolioPageProps {
   userId: string;
@@ -44,6 +45,10 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
     totalReturnsPercent: 0
   });
   const [loading, setLoading] = useState(true);
+  const [sellDialog, setSellDialog] = useState<{ open: boolean; holding: PortfolioHolding | null }>({
+    open: false,
+    holding: null
+  });
 
   useEffect(() => {
     fetchPortfolioData();
@@ -226,6 +231,7 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
                         Current (Invested) <ChevronDown className="w-4 h-4" />
                       </div>
                     </th>
+                    <th className="p-4 font-medium text-gray-600">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -272,6 +278,17 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
                           <div className="font-semibold text-gray-900">{Math.round(currentValue)} coins</div>
                           <div className="text-sm text-gray-500">{Math.round(investedValue)} coins</div>
                         </td>
+                        <td className="p-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSellDialog({ open: true, holding })}
+                            className="flex items-center gap-1"
+                          >
+                            <Minus className="w-4 h-4" />
+                            Sell
+                          </Button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -297,6 +314,17 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Sell Dialog */}
+      {sellDialog.holding && (
+        <SellStockDialog
+          open={sellDialog.open}
+          onClose={() => setSellDialog({ open: false, holding: null })}
+          holding={sellDialog.holding}
+          userId={userId}
+          onSellComplete={fetchPortfolioData}
+        />
       )}
     </div>
   );
