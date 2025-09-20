@@ -159,25 +159,11 @@ export function SettingsPage({ userId }: SettingsPageProps) {
 
           <div className="space-y-2">
             <Label>Account Statistics</Label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-primary/5 p-4 rounded-lg">
-                <div className="text-2xl font-bold text-primary">
-                  {profile?.virtual_coins?.toLocaleString() || '0'}
-                </div>
-                <div className="text-sm text-muted-foreground">Virtual Coins</div>
+            <div className="bg-primary/5 p-4 rounded-lg">
+              <div className="text-2xl font-bold text-primary">
+                {profile?.virtual_coins?.toLocaleString() || '0'}
               </div>
-              <div className="bg-green-500/5 p-4 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">
-                  ${profile?.total_portfolio_value?.toFixed(2) || '0.00'}
-                </div>
-                <div className="text-sm text-muted-foreground">Portfolio Value</div>
-              </div>
-              <div className="bg-blue-500/5 p-4 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">
-                  {profile?.total_returns?.toFixed(2) || '0.00'}%
-                </div>
-                <div className="text-sm text-muted-foreground">Total Returns</div>
-              </div>
+              <div className="text-sm text-muted-foreground">Virtual Coins</div>
             </div>
           </div>
 
