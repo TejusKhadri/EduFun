@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ShoppingCart, Search, TrendingUp, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { StockAPI, NYSE_STOCKS } from '@/lib/stockAPI';
+import { useStockData } from '@/hooks/useStockData';
+import { StockAPI, FORTUNE_100_STOCKS } from '@/lib/stockAPI';
 
 interface MarketPageProps {
   virtualCoins: number;
@@ -83,7 +84,7 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
   };
 
   const loadFallbackStocks = () => {
-    const fallbackStocks = NYSE_STOCKS.slice(0, 8).map(stock => ({
+    const fallbackStocks = FORTUNE_100_STOCKS.slice(0, 8).map(stock => ({
       symbol: stock.symbol,
       name: stock.name,
       price: Math.random() * 200 + 50,
@@ -154,7 +155,7 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
   };
 
   const getSectors = () => {
-    const sectors = Array.from(new Set(NYSE_STOCKS.map(stock => stock.sector)));
+    const sectors = Array.from(new Set(FORTUNE_100_STOCKS.map(stock => stock.sector)));
     return sectors.sort();
   };
 
