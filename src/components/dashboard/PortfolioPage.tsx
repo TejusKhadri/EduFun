@@ -118,8 +118,8 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
   };
 
   const formatCurrency = (amount: number) => {
-    // For the educational app, we'll use virtual coins instead of real currency
-    return `${Math.round(amount).toLocaleString()} coins`;
+    // Stock values are displayed in dollars
+    return `$${Math.round(amount).toLocaleString()}`;
   };
 
   const formatNumber = (num: number) => {
@@ -188,7 +188,7 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
             <div>
               <p className="text-sm text-gray-600 mb-1">1D returns</p>
               <p className={`text-lg font-semibold ${getReturnColor(portfolioStats.oneDayReturns)}`}>
-                {portfolioStats.oneDayReturns >= 0 ? '+' : ''}{formatCurrency(Math.abs(portfolioStats.oneDayReturns))} ({portfolioStats.currentValue > 0 ? (portfolioStats.oneDayReturns / portfolioStats.currentValue * 100).toFixed(2) : '0.00'}%)
+                {portfolioStats.oneDayReturns >= 0 ? '+' : ''}${formatCurrency(Math.abs(portfolioStats.oneDayReturns)).replace('$', '')} ({portfolioStats.currentValue > 0 ? (portfolioStats.oneDayReturns / portfolioStats.currentValue * 100).toFixed(2) : '0.00'}%)
               </p>
             </div>
             
@@ -249,7 +249,7 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
                           <div>
                             <div className="font-medium text-gray-900">{holding.stock_name}</div>
                             <div className="text-sm text-gray-500">
-                              {holding.shares} shares • Avg. {Math.round(holding.buy_price)} coins
+                              {holding.shares} shares • Avg. ${Math.round(holding.buy_price)}
                             </div>
                           </div>
                         </td>
@@ -261,22 +261,22 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
                           </div>
                         </td>
                         <td className="p-4">
-                          <div className="font-semibold text-gray-900">{Math.round(holding.current_price)} coins</div>
+                          <div className="font-semibold text-gray-900">${Math.round(holding.current_price)}</div>
                           <div className={`text-sm ${oneDayChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {oneDayChange >= 0 ? '+' : ''}{oneDayChange.toFixed(2)} ({Math.abs(oneDayChange).toFixed(2)}%)
+                            {oneDayChange >= 0 ? '+' : ''}${oneDayChange.toFixed(2)} ({Math.abs(oneDayChange).toFixed(2)}%)
                           </div>
                         </td>
                         <td className="p-4">
                           <div className={`font-semibold ${getReturnColor(returns)}`}>
-                            {returns >= 0 ? '+' : ''}{Math.round(Math.abs(returns))} coins
+                            {returns >= 0 ? '+' : ''}${Math.round(Math.abs(returns))}
                           </div>
                           <div className={`text-sm ${getReturnColor(returns)}`}>
                             {returnsPercent.toFixed(2)}%
                           </div>
                         </td>
                         <td className="p-4">
-                          <div className="font-semibold text-gray-900">{Math.round(currentValue)} coins</div>
-                          <div className="text-sm text-gray-500">{Math.round(investedValue)} coins</div>
+                          <div className="font-semibold text-gray-900">${Math.round(currentValue)}</div>
+                          <div className="text-sm text-gray-500">${Math.round(investedValue)}</div>
                         </td>
                         <td className="p-4">
                           <Button

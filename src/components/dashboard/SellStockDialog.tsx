@@ -128,8 +128,8 @@ export function SellStockDialog({ open, onClose, holding, userId, onSellComplete
         <div className="space-y-4">
           <div className="text-sm text-gray-600">
             <p>Current holdings: {holding.shares} shares</p>
-            <p>Current price: {Math.round(holding.current_price)} coins per share</p>
-            <p>Your average buy price: {Math.round(holding.buy_price)} coins per share</p>
+            <p>Current price: ${Math.round(holding.current_price)} per share</p>
+            <p>Your average buy price: ${Math.round(holding.buy_price)} per share</p>
           </div>
 
           <div className="space-y-2">
@@ -148,12 +148,12 @@ export function SellStockDialog({ open, onClose, holding, userId, onSellComplete
           <div className="bg-gray-50 p-4 rounded-lg space-y-2">
             <div className="flex justify-between">
               <span>Total value:</span>
-              <span className="font-semibold">{Math.round(totalValue)} coins</span>
+              <span className="font-semibold">${Math.round(totalValue)}</span>
             </div>
             <div className="flex justify-between">
               <span>Profit/Loss:</span>
               <span className={`font-semibold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {profit >= 0 ? '+' : ''}{Math.round(profit)} coins
+                {profit >= 0 ? '+' : ''}${Math.round(profit)}
               </span>
             </div>
           </div>
