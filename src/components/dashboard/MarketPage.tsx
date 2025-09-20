@@ -1,14 +1,34 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShoppingCart, Search, TrendingUp, Filter } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import { 
+  ShoppingCart, 
+  Search, 
+  TrendingUp, 
+  Filter, 
+  BarChart3,
+  MessageSquare,
+  Award,
+  Lightbulb,
+  DollarSign,
+  Eye,
+  Star,
+  Zap
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { useStockData } from '@/hooks/useStockData';
 import { StockAPI, FORTUNE_100_STOCKS } from '@/lib/stockAPI';
+import { StockDetailDialog } from './StockDetailDialog';
+import { TradeConfirmationDialog } from './TradeConfirmationDialog';
+import { EducationalTipDialog } from './EducationalTipDialog';
+import { format } from 'date-fns';
 
 interface MarketPageProps {
   virtualCoins: number;
@@ -24,7 +44,40 @@ interface StockData {
   changePercent: number;
   sector: string;
   description: string;
+  funFacts?: string[];
+  marketCap?: string;
+  volume?: number;
 }
+
+interface MarketStats {
+  totalGainersCount: number;
+  totalLosersCount: number;
+  mostActiveStock: string;
+  sectorPerformance: { sector: string; performance: number }[];
+}
+
+const EDUCATIONAL_TIPS = [
+  {
+    title: "🎯 Diversification Tip",
+    content: "Smart investors spread their money across different sectors! Try buying stocks from technology, healthcare, and consumer goods to reduce risk.",
+    badge: "smart-investor"
+  },
+  {
+    title: "📈 Buy Low, Sell High",
+    content: "Look for stocks that are down but have strong companies behind them. Sometimes the best opportunities come when prices are temporarily low!",
+    badge: "bargain-hunter"
+  },
+  {
+    title: "🔍 Research First",
+    content: "Always read the company description and check recent discussions before investing. Knowledge is your best tool!",
+    badge: "researcher"
+  },
+  {
+    title: "💎 Long-term Thinking",
+    content: "The best investors think long-term! Don't panic if a stock goes down temporarily - focus on the company's future potential.",
+    badge: "patient-investor"
+  }
+];
 
 export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPageProps) {
   const [stocks, setStocks] = useState<StockData[]>([]);
@@ -33,11 +86,21 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
   const [selectedSector, setSelectedSector] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [marketStats, setMarketStats] = useState<MarketStats | null>(null);
+  const [selectedStock, setSelectedStock] = useState<StockData | null>(null);
+  const [showStockDetail, setShowStockDetail] = useState(false);
+  const [showTradeConfirm, setShowTradeConfirm] = useState(false);
+  const [tradeData, setTradeData] = useState<{stock: StockData, quantity: number, type: 'buy' | 'sell'} | null>(null);
+  const [showEducationalTip, setShowEducationalTip] = useState(false);
+  const [currentTip, setCurrentTip] = useState(EDUCATIONAL_TIPS[0]);
+  const [userBadges, setUserBadges] = useState<string[]>([]);
+  const [recentDiscussions, setRecentDiscussions] = useState<any[]>([]);
+  const { toast } = useToast();
 
   const stockAPI = StockAPI.getInstance();
 
   useEffect(() => {
-    loadInitialStocks();
+    loadInitialData();
     const updateTime = () => {
       const now = new Date();
       setLastUpdated(now.toLocaleTimeString('en-US', { 
@@ -57,10 +120,23 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
     filterStocks();
   }, [stocks, searchQuery, selectedSector]);
 
-  const loadInitialStocks = async () => {
+  const loadInitialData = async () => {
     try {
       setLoading(true);
-      // Load regular trending stocks only for main display
+      await Promise.all([
+        loadStocks(),
+        loadUserBadges(),
+        loadRecentDiscussions()
+      ]);
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadStocks = async () => {
+    try {
       const trendingQuotes = await stockAPI.getTrendingStocks();
       
       const stockData = trendingQuotes.map(quote => ({
@@ -70,104 +146,110 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
         change: quote.change,
         changePercent: quote.changePercent,
         sector: quote.sector || 'Technology',
-        description: stockAPI.getStockDescription(quote.symbol)
+        description: stockAPI.getStockDescription(quote.symbol),
+        funFacts: generateFunFacts(quote.symbol),
+        marketCap: generateMarketCap(),
+        volume: Math.floor(Math.random() * 10000000) + 1000000
       }));
 
       setStocks(stockData);
+      calculateMarketStats(stockData);
     } catch (error) {
       console.error('Error loading stocks:', error);
-      // Fallback to static data
       loadFallbackStocks();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadTrendingWithIndices = async () => {
-    try {
-      setLoading(true);
-      // Load trending stocks with Indian market indices for trending view
-      const trendingQuotes = await stockAPI.getTrendingStocks();
-      
-      // Add mock Indian indices data
-      const indianIndices = [
-        { symbol: 'NIFTY', name: 'Nifty 50', price: 25327.05, change: -96.55, changePercent: -0.38, volume: 0, sector: 'Index' },
-        { symbol: 'SENSEX', name: 'Sensex', price: 82626.23, change: -387.73, changePercent: -0.47, volume: 0, sector: 'Index' },
-        { symbol: 'BANKNIFTY', name: 'Bank Nifty', price: 55458.85, change: -268.60, changePercent: -0.48, volume: 0, sector: 'Index' }
-      ];
-      
-      // Show indices first, then trending stocks
-      const stockData = [
-        ...indianIndices.map(index => ({
-          symbol: index.symbol,
-          name: index.name,
-          price: index.price,
-          change: index.change,
-          changePercent: index.changePercent,
-          sector: index.sector,
-          description: `Indian stock market ${index.name} index - View only, not available for purchase`
-        })),
-        ...trendingQuotes.slice(0, 5).map(quote => ({
-          symbol: quote.symbol,
-          name: quote.name,
-          price: quote.price,
-          change: quote.change,
-          changePercent: quote.changePercent,
-          sector: quote.sector || 'Technology',
-          description: stockAPI.getStockDescription(quote.symbol)
-        }))
-      ];
-
-      setStocks(stockData);
-    } catch (error) {
-      console.error('Error loading trending stocks:', error);
-      loadFallbackStocks();
-    } finally {
-      setLoading(false);
     }
   };
 
   const loadFallbackStocks = () => {
-    const fallbackStocks = FORTUNE_100_STOCKS.slice(0, 8).map(stock => ({
+    const fallbackStocks = FORTUNE_100_STOCKS.slice(0, 12).map(stock => ({
       symbol: stock.symbol,
       name: stock.name,
       price: Math.random() * 200 + 50,
       change: (Math.random() - 0.5) * 10,
       changePercent: (Math.random() - 0.5) * 5,
       sector: stock.sector,
-      description: stock.description
+      description: stock.description,
+      funFacts: generateFunFacts(stock.symbol),
+      marketCap: generateMarketCap(),
+      volume: Math.floor(Math.random() * 10000000) + 1000000
     }));
     setStocks(fallbackStocks);
+    calculateMarketStats(fallbackStocks);
   };
 
-  const searchStocks = async (query: string) => {
-    if (!query.trim()) {
-      await loadInitialStocks();
-      return;
-    }
+  const generateFunFacts = (symbol: string): string[] => {
+    const facts = [
+      `${symbol} was founded by visionary entrepreneurs who started in a garage!`,
+      `The company employs over 100,000 people worldwide, creating jobs for families.`,
+      `${symbol} spends billions on research to create amazing new products.`,
+      `The company is committed to protecting our environment and uses clean energy.`,
+      `${symbol} has customers in over 190 countries around the world!`
+    ];
+    return facts.slice(0, 3);
+  };
 
+  const generateMarketCap = (): string => {
+    const values = ['5.2B', '12.8B', '45.1B', '89.3B', '156.7B', '234.5B'];
+    return values[Math.floor(Math.random() * values.length)];
+  };
+
+  const calculateMarketStats = (stockData: StockData[]) => {
+    const gainers = stockData.filter(s => s.changePercent > 0);
+    const losers = stockData.filter(s => s.changePercent < 0);
+    const mostActive = stockData.reduce((prev, current) => 
+      (current.volume || 0) > (prev.volume || 0) ? current : prev
+    );
+
+    const sectorPerf = stockData.reduce((acc, stock) => {
+      if (!acc[stock.sector]) acc[stock.sector] = [];
+      acc[stock.sector].push(stock.changePercent);
+      return acc;
+    }, {} as Record<string, number[]>);
+
+    const sectorPerformance = Object.entries(sectorPerf).map(([sector, changes]) => ({
+      sector,
+      performance: changes.reduce((sum, change) => sum + change, 0) / changes.length
+    }));
+
+    setMarketStats({
+      totalGainersCount: gainers.length,
+      totalLosersCount: losers.length,
+      mostActiveStock: mostActive.symbol,
+      sectorPerformance: sectorPerformance.sort((a, b) => b.performance - a.performance)
+    });
+  };
+
+  const loadUserBadges = async () => {
     try {
-      setLoading(true);
-      const searchResults = await stockAPI.searchStocks(query);
-      const searchSymbols = searchResults.slice(0, 12).map(result => result.symbol);
-      const quotes = await stockAPI.getMultipleQuotes(searchSymbols);
+      const { data } = await supabase
+        .from('user_achievements')
+        .select('achievement_type')
+        .eq('user_id', userId);
       
-      const searchedStocks = quotes.map(quote => ({
-        symbol: quote.symbol,
-        name: quote.name,
-        price: quote.price,
-        change: quote.change,
-        changePercent: quote.changePercent,
-        sector: quote.sector || 'Technology',
-        description: stockAPI.getStockDescription(quote.symbol)
-      }));
-
-      setStocks(searchedStocks);
+      setUserBadges(data?.map(badge => badge.achievement_type) || []);
     } catch (error) {
-      console.error('Error searching stocks:', error);
-      toast.error('Search failed. Showing trending stocks.');
-    } finally {
-      setLoading(false);
+      console.error('Error loading badges:', error);
+    }
+  };
+
+  const loadRecentDiscussions = async () => {
+    try {
+      const { data } = await supabase
+        .from('discussion_posts')
+        .select(`
+          *,
+          user_profile:profiles!discussion_posts_user_id_fkey (
+            display_name,
+            avatar_url
+          )
+        `)
+        .eq('category', 'stocks')
+        .order('upvotes', { ascending: false })
+        .limit(5);
+      
+      setRecentDiscussions(data || []);
+    } catch (error) {
+      console.error('Error loading discussions:', error);
     }
   };
 
@@ -191,244 +273,442 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
     setFilteredStocks(filtered);
   };
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    if (query.trim()) {
-      await searchStocks(query);
-    }
-  };
-
   const getSectors = () => {
-    const sectors = Array.from(new Set(FORTUNE_100_STOCKS.map(stock => stock.sector)));
+    const sectors = Array.from(new Set(stocks.map(stock => stock.sector)));
     return sectors.sort();
   };
 
-  const handleBuyStock = async (stock: StockData) => {
-    const costInCoins = Math.floor(stock.price);
+  const handleStockClick = (stock: StockData) => {
+    setSelectedStock(stock);
+    setShowStockDetail(true);
+  };
+
+  const handleBuyClick = (stock: StockData, quantity: number = 1) => {
+    setTradeData({ stock, quantity, type: 'buy' });
+    setShowTradeConfirm(true);
     
-    if (costInCoins > virtualCoins) {
-      toast.error('Not enough virtual coins!');
+    // Show educational tip randomly
+    if (Math.random() < 0.3) {
+      const randomTip = EDUCATIONAL_TIPS[Math.floor(Math.random() * EDUCATIONAL_TIPS.length)];
+      setCurrentTip(randomTip);
+      setTimeout(() => setShowEducationalTip(true), 1000);
+    }
+  };
+
+  const confirmTrade = async () => {
+    if (!tradeData) return;
+
+    const { stock, quantity, type } = tradeData;
+    const costInCoins = Math.floor(stock.price * quantity);
+    
+    if (type === 'buy' && costInCoins > virtualCoins) {
+      toast({
+        title: "Not enough coins! 💰",
+        description: "You need more virtual coins to make this purchase.",
+        variant: "destructive"
+      });
       return;
     }
 
     try {
-      // Check if user already owns this stock
-      const { data: existingStock } = await supabase
-        .from('portfolios')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('stock_symbol', stock.symbol)
-        .maybeSingle();
-
-      if (existingStock) {
-        // Update existing holding - calculate new average price
-        const newShares = existingStock.shares + 1;
-        const newAvgPrice = ((existingStock.buy_price * existingStock.shares) + stock.price) / newShares;
+      if (type === 'buy') {
+        await processBuyTrade(stock, quantity, costInCoins);
         
-        const { error } = await supabase
-          .from('portfolios')
-          .update({
-            shares: newShares,
-            buy_price: newAvgPrice,
-            current_price: stock.price,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingStock.id);
-
-        if (error) throw error;
-      } else {
-        // Create new holding
-        const { error } = await supabase
-          .from('portfolios')
-          .insert({
-            user_id: userId,
-            stock_symbol: stock.symbol,
-            stock_name: stock.name,
-            shares: 1,
-            buy_price: stock.price,
-            current_price: stock.price,
-            category: stock.sector,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
-
-        if (error) throw error;
+        // Award badges
+        await checkAndAwardTradingBadges();
+        
+        toast({
+          title: "Trade Successful! 🎉",
+          description: `Bought ${quantity} share${quantity > 1 ? 's' : ''} of ${stock.symbol} for ${costInCoins} coins!`
+        });
       }
 
-      // Add transaction record
+      setShowTradeConfirm(false);
+      setTradeData(null);
+    } catch (error) {
+      console.error('Error processing trade:', error);
+      toast({
+        title: "Trade Failed",
+        description: "Failed to process trade. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const processBuyTrade = async (stock: StockData, quantity: number, cost: number) => {
+    // Check if user already owns this stock
+    const { data: existingStock } = await supabase
+      .from('portfolios')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('stock_symbol', stock.symbol)
+      .maybeSingle();
+
+    if (existingStock) {
+      const newShares = existingStock.shares + quantity;
+      const newAvgPrice = ((existingStock.buy_price * existingStock.shares) + (stock.price * quantity)) / newShares;
+      
       await supabase
-        .from('transactions')
+        .from('portfolios')
+        .update({
+          shares: newShares,
+          buy_price: newAvgPrice,
+          current_price: stock.price,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingStock.id);
+    } else {
+      await supabase
+        .from('portfolios')
         .insert({
           user_id: userId,
           stock_symbol: stock.symbol,
           stock_name: stock.name,
-          transaction_type: 'buy',
-          shares: 1,
-          price: stock.price,
-          total_amount: costInCoins
+          shares: quantity,
+          buy_price: stock.price,
+          current_price: stock.price,
+          category: stock.sector
         });
+    }
 
-      // Update virtual coins
-      onUpdateCoins(virtualCoins - costInCoins);
-      toast.success(`Bought 1 share of ${stock.symbol} for ${costInCoins} coins!`);
+    // Add transaction record
+    await supabase
+      .from('transactions')
+      .insert({
+        user_id: userId,
+        stock_symbol: stock.symbol,
+        stock_name: stock.name,
+        transaction_type: 'buy',
+        shares: quantity,
+        price: stock.price,
+        total_amount: cost
+      });
 
-    } catch (error) {
-      console.error('Error buying stock:', error);
-      toast.error('Failed to buy stock. Please try again.');
+    // Update virtual coins
+    onUpdateCoins(virtualCoins - cost);
+  };
+
+  const checkAndAwardTradingBadges = async () => {
+    // Get transaction count
+    const { count } = await supabase
+      .from('transactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    const transactionCount = count || 0;
+
+    // Award badges based on trading activity
+    const badgesToAward = [];
+    
+    if (transactionCount >= 1 && !userBadges.includes('first-trade')) {
+      badgesToAward.push({ type: 'first-trade', name: 'First Trade' });
+    }
+    
+    if (transactionCount >= 5 && !userBadges.includes('active-trader')) {
+      badgesToAward.push({ type: 'active-trader', name: 'Active Trader' });
+    }
+    
+    if (transactionCount >= 10 && !userBadges.includes('trading-pro')) {
+      badgesToAward.push({ type: 'trading-pro', name: 'Trading Pro' });
+    }
+
+    // Award the badges
+    for (const badge of badgesToAward) {
+      await supabase
+        .from('user_achievements')
+        .insert({
+          user_id: userId,
+          achievement_type: badge.type,
+          achievement_name: badge.name
+        });
+    }
+
+    if (badgesToAward.length > 0) {
+      loadUserBadges(); // Refresh badges
+      toast({
+        title: "New Badge Earned! 🏆",
+        description: `You earned: ${badgesToAward.map(b => b.name).join(', ')}`
+      });
     }
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold text-foreground">Stock Market</h1>
-        <p className="text-muted-foreground">Search and invest in real NYSE companies with your virtual coins!</p>
-      </div>
-
-      {/* Search and Filter Section */}
-      <div className="space-y-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Search stocks by name, symbol, or description..."
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <div className="flex gap-2">
-            <Select value={selectedSector} onValueChange={setSelectedSector}>
-              <SelectTrigger className="w-48">
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Filter by sector" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Sectors</SelectItem>
-                {getSectors().map(sector => (
-                  <SelectItem key={sector} value={sector}>{sector}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button 
-              variant="outline" 
-              onClick={() => loadTrendingWithIndices()}
-              className="whitespace-nowrap"
-            >
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Trending
-            </Button>
-          </div>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header with Market Stats */}
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <BarChart3 className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Stock Market Explorer
+          </h1>
         </div>
-
-        {/* Market Status */}
-        <div className="flex items-center gap-4">
-          <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-            stockAPI.isMarketOpen() 
-              ? 'bg-accent-green text-white' 
-              : 'bg-orange-500 text-white'
-          }`}>
-            {stockAPI.isMarketOpen() ? 'Market Open' : 'Market Closed'}
-          </div>
-          <span className="text-sm text-muted-foreground">
-            Last updated: {lastUpdated}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            Showing {filteredStocks.length} stocks
-          </span>
+        <p className="text-muted-foreground">
+          Discover amazing companies and start your investment journey! 🚀
+        </p>
+        
+        {/* Market Overview Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="hover-scale bg-gradient-to-br from-success/10 to-success/5">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-success">📈</div>
+              <div className="text-lg font-semibold">{marketStats?.totalGainersCount || 0}</div>
+              <div className="text-xs text-muted-foreground">Stocks Up</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="hover-scale bg-gradient-to-br from-destructive/10 to-destructive/5">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-destructive">📉</div>
+              <div className="text-lg font-semibold">{marketStats?.totalLosersCount || 0}</div>
+              <div className="text-xs text-muted-foreground">Stocks Down</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="hover-scale bg-gradient-to-br from-primary/10 to-primary/5">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-primary">⚡</div>
+              <div className="text-lg font-semibold">{marketStats?.mostActiveStock || 'N/A'}</div>
+              <div className="text-xs text-muted-foreground">Most Active</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="hover-scale bg-gradient-to-br from-warning/10 to-warning/5">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-warning">💰</div>
+              <div className="text-lg font-semibold">{virtualCoins.toLocaleString()}</div>
+              <div className="text-xs text-muted-foreground">Your Coins</div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      {/* Search and Filters */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search for amazing companies..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 h-12"
+          />
         </div>
-      )}
+        <Select value={selectedSector} onValueChange={setSelectedSector}>
+          <SelectTrigger className="w-48 h-12">
+            <Filter className="w-4 h-4 mr-2" />
+            <SelectValue placeholder="All Sectors" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">🌟 All Sectors</SelectItem>
+            {getSectors().map(sector => (
+              <SelectItem key={sector} value={sector}>
+                {sector === 'Technology' ? '💻' : 
+                 sector === 'Healthcare' ? '🏥' :
+                 sector === 'Financial' ? '🏦' :
+                 sector === 'Consumer' ? '🛍️' : '🏢'} {sector}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      {/* No Results */}
-      {!loading && filteredStocks.length === 0 && (
-        <div className="text-center py-12">
-          <h3 className="text-lg font-semibold text-foreground mb-2">No stocks found</h3>
-          <p className="text-muted-foreground mb-4">Try adjusting your search terms or filters</p>
-          <Button onClick={() => {
-            setSearchQuery('');
-            setSelectedSector('all');
-            loadInitialStocks();
-          }}>
-            Show All Stocks
-          </Button>
-        </div>
-      )}
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Sidebar */}
+        <div className="lg:col-span-1 space-y-4">
+          {/* Market Status */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                Market Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className={`px-3 py-1 rounded-full text-sm font-medium text-center ${
+                stockAPI.isMarketOpen() 
+                  ? 'bg-success text-success-foreground' 
+                  : 'bg-warning text-warning-foreground'
+              }`}>
+                {stockAPI.isMarketOpen() ? '🟢 Market Open' : '🔴 Market Closed'}
+              </div>
+              <div className="text-sm text-center text-muted-foreground">
+                Last updated: {lastUpdated}
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Stock Grid */}
-      {!loading && filteredStocks.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredStocks.map((stock) => (
-            <Card key={stock.symbol} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6 space-y-4">
-                {/* Stock Header */}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-foreground">{stock.symbol}</h3>
-                    <p className="text-sm text-muted-foreground">{stock.name}</p>
-                  </div>
-                  <Badge 
-                    variant="secondary" 
-                    className={
-                      stock.sector === 'Technology' ? 'bg-blue-100 text-blue-700' :
-                      stock.sector === 'Entertainment' ? 'bg-purple-100 text-purple-700' :
-                      stock.sector === 'Food Service' ? 'bg-green-100 text-green-700' :
-                      stock.sector === 'Apparel' ? 'bg-orange-100 text-orange-700' :
-                      stock.sector === 'Automotive' ? 'bg-red-100 text-red-700' :
-                      stock.sector === 'Healthcare' ? 'bg-pink-100 text-pink-700' :
-                      stock.sector === 'Financial' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-gray-100 text-gray-700'
-                    }
-                  >
-                    {stock.sector}
-                  </Badge>
-                </div>
-
-                {/* Price Info */}
-                <div className="space-y-1">
-                  <div className="text-2xl font-bold text-foreground">
-                    ${stock.price.toFixed(2)}
-                  </div>
-                  <div className={`flex items-center gap-1 text-sm ${
-                    stock.changePercent >= 0 ? 'text-accent-green' : 'text-destructive'
-                  }`}>
-                    <span>{stock.changePercent >= 0 ? '📈' : '📉'}</span>
-                    <span>
-                      {stock.changePercent >= 0 ? '+' : ''}${stock.change.toFixed(2)} 
-                      ({stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(1)}%)
+          {/* Top Discussions */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-primary" />
+                Hot Discussions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {recentDiscussions.slice(0, 3).map((discussion) => (
+                <div key={discussion.id} className="p-2 rounded border bg-muted/50">
+                  <div className="font-medium text-sm truncate">{discussion.title}</div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-1">
+                      <Star className="h-3 w-3 text-warning" />
+                      <span className="text-xs">{discussion.upvotes}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      by {discussion.user_profile?.display_name || 'Anonymous'}
                     </span>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    Cost: {Math.floor(stock.price)} coins per share
-                  </div>
                 </div>
-
-                {/* Description */}
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {stock.description}
+              ))}
+              {recentDiscussions.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center">
+                  No stock discussions yet
                 </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-                {/* Buy Button */}
-                <Button
-                  onClick={() => handleBuyStock(stock)}
-                  className="w-full bg-amber-400 hover:bg-amber-500 text-black font-semibold"
-                  disabled={Math.floor(stock.price) > virtualCoins || stock.sector === 'Index'}
-                >
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  {stock.sector === 'Index' ? 'View Only' : `Buy 1 Share - ${Math.floor(stock.price)} coins`}
+        {/* Stock Grid */}
+        <div className="lg:col-span-3">
+          {filteredStocks.length === 0 ? (
+            <Card className="text-center py-12">
+              <CardContent>
+                <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No stocks found</h3>
+                <p className="text-muted-foreground mb-4">
+                  Try adjusting your search or explore different sectors
+                </p>
+                <Button onClick={() => {
+                  setSearchQuery('');
+                  setSelectedSector('all');
+                }}>
+                  Show All Stocks
                 </Button>
               </CardContent>
             </Card>
-          ))}
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {filteredStocks.map((stock) => (
+                <Card key={stock.symbol} className="hover-scale transition-all duration-300 hover:shadow-xl">
+                  <CardContent className="p-6 space-y-4">
+                    {/* Stock Header */}
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-lg font-bold">{stock.symbol}</h3>
+                          <Badge variant="outline" className="text-xs">
+                            {stock.sector === 'Technology' ? '💻' : 
+                             stock.sector === 'Healthcare' ? '🏥' :
+                             stock.sector === 'Financial' ? '🏦' : '🏢'}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-1">{stock.name}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleStockClick(stock)}
+                        className="p-1"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {/* Price Display */}
+                    <div className="space-y-2">
+                      <div className="text-2xl font-bold">
+                        ${stock.price.toFixed(2)}
+                      </div>
+                      <div className={`flex items-center gap-1 text-sm ${
+                        stock.changePercent >= 0 ? 'text-success' : 'text-destructive'
+                      }`}>
+                        <span>{stock.changePercent >= 0 ? '📈' : '📉'}</span>
+                        <span>
+                          {stock.changePercent >= 0 ? '+' : ''}${stock.change.toFixed(2)} 
+                          ({stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(1)}%)
+                        </span>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        💰 Cost: {Math.floor(stock.price)} coins per share
+                      </div>
+                    </div>
+
+                    {/* Quick Stats */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-muted/50 p-2 rounded">
+                        <div className="text-muted-foreground">Market Cap</div>
+                        <div className="font-medium">${stock.marketCap}</div>
+                      </div>
+                      <div className="bg-muted/50 p-2 rounded">
+                        <div className="text-muted-foreground">Volume</div>
+                        <div className="font-medium">{(stock.volume || 0).toLocaleString()}</div>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleBuyClick(stock)}
+                        className="flex-1 bg-gradient-to-r from-success to-success/80 hover:from-success/90 hover:to-success/70"
+                        disabled={Math.floor(stock.price) > virtualCoins}
+                      >
+                        <ShoppingCart className="w-4 h-4 mr-1" />
+                        Buy
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleStockClick(stock)}
+                        className="px-3"
+                      >
+                        <BarChart3 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* Dialogs */}
+      {selectedStock && (
+        <StockDetailDialog
+          stock={selectedStock}
+          open={showStockDetail}
+          onOpenChange={setShowStockDetail}
+          onBuyClick={(quantity) => handleBuyClick(selectedStock, quantity)}
+          userCoins={virtualCoins}
+        />
       )}
+
+      {tradeData && (
+        <TradeConfirmationDialog
+          open={showTradeConfirm}
+          onOpenChange={setShowTradeConfirm}
+          tradeData={tradeData}
+          userCoins={virtualCoins}
+          onConfirm={confirmTrade}
+        />
+      )}
+
+      <EducationalTipDialog
+        open={showEducationalTip}
+        onOpenChange={setShowEducationalTip}
+        tip={currentTip}
+      />
     </div>
   );
 }
