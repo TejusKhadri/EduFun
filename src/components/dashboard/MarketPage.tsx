@@ -13,12 +13,10 @@ import {
   TrendingUp, 
   Filter, 
   BarChart3,
-  MessageSquare,
   Award,
   Lightbulb,
   DollarSign,
   Eye,
-  Star,
   Zap
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -86,7 +84,6 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
   const [selectedSector, setSelectedSector] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string>('');
-  const [marketStats, setMarketStats] = useState<MarketStats | null>(null);
   const [selectedStock, setSelectedStock] = useState<StockData | null>(null);
   const [showStockDetail, setShowStockDetail] = useState(false);
   const [showTradeConfirm, setShowTradeConfirm] = useState(false);
@@ -94,7 +91,6 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
   const [showEducationalTip, setShowEducationalTip] = useState(false);
   const [currentTip, setCurrentTip] = useState(EDUCATIONAL_TIPS[0]);
   const [userBadges, setUserBadges] = useState<string[]>([]);
-  const [recentDiscussions, setRecentDiscussions] = useState<any[]>([]);
   const { toast } = useToast();
 
   const stockAPI = StockAPI.getInstance();
@@ -125,8 +121,7 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
       setLoading(true);
       await Promise.all([
         loadStocks(),
-        loadUserBadges(),
-        loadRecentDiscussions()
+        loadUserBadges()
       ]);
     } catch (error) {
       console.error('Error loading initial data:', error);
@@ -153,7 +148,6 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
       }));
 
       setStocks(stockData);
-      calculateMarketStats(stockData);
     } catch (error) {
       console.error('Error loading stocks:', error);
       loadFallbackStocks();
@@ -174,7 +168,6 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
       volume: Math.floor(Math.random() * 10000000) + 1000000
     }));
     setStocks(fallbackStocks);
-    calculateMarketStats(fallbackStocks);
   };
 
   const generateFunFacts = (symbol: string): string[] => {
@@ -193,32 +186,6 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
     return values[Math.floor(Math.random() * values.length)];
   };
 
-  const calculateMarketStats = (stockData: StockData[]) => {
-    const gainers = stockData.filter(s => s.changePercent > 0);
-    const losers = stockData.filter(s => s.changePercent < 0);
-    const mostActive = stockData.reduce((prev, current) => 
-      (current.volume || 0) > (prev.volume || 0) ? current : prev
-    );
-
-    const sectorPerf = stockData.reduce((acc, stock) => {
-      if (!acc[stock.sector]) acc[stock.sector] = [];
-      acc[stock.sector].push(stock.changePercent);
-      return acc;
-    }, {} as Record<string, number[]>);
-
-    const sectorPerformance = Object.entries(sectorPerf).map(([sector, changes]) => ({
-      sector,
-      performance: changes.reduce((sum, change) => sum + change, 0) / changes.length
-    }));
-
-    setMarketStats({
-      totalGainersCount: gainers.length,
-      totalLosersCount: losers.length,
-      mostActiveStock: mostActive.symbol,
-      sectorPerformance: sectorPerformance.sort((a, b) => b.performance - a.performance)
-    });
-  };
-
   const loadUserBadges = async () => {
     try {
       const { data } = await supabase
@@ -229,27 +196,6 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
       setUserBadges(data?.map(badge => badge.achievement_type) || []);
     } catch (error) {
       console.error('Error loading badges:', error);
-    }
-  };
-
-  const loadRecentDiscussions = async () => {
-    try {
-      const { data } = await supabase
-        .from('discussion_posts')
-        .select(`
-          *,
-          user_profile:profiles!discussion_posts_user_id_fkey (
-            display_name,
-            avatar_url
-          )
-        `)
-        .eq('category', 'stocks')
-        .order('upvotes', { ascending: false })
-        .limit(5);
-      
-      setRecentDiscussions(data || []);
-    } catch (error) {
-      console.error('Error loading discussions:', error);
     }
   };
 
@@ -444,11 +390,11 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header with Market Stats */}
+      {/* Header */}
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center gap-3 mb-2">
           <BarChart3 className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-foreground">
             Stock Market Explorer
           </h1>
         </div>
@@ -456,40 +402,14 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
           Discover amazing companies and start your investment journey! 🚀
         </p>
         
-        {/* Market Overview Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="hover-scale bg-gradient-to-br from-success/10 to-success/5">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-success">📈</div>
-              <div className="text-lg font-semibold">{marketStats?.totalGainersCount || 0}</div>
-              <div className="text-xs text-muted-foreground">Stocks Up</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="hover-scale bg-gradient-to-br from-destructive/10 to-destructive/5">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-destructive">📉</div>
-              <div className="text-lg font-semibold">{marketStats?.totalLosersCount || 0}</div>
-              <div className="text-xs text-muted-foreground">Stocks Down</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="hover-scale bg-gradient-to-br from-primary/10 to-primary/5">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-primary">⚡</div>
-              <div className="text-lg font-semibold">{marketStats?.mostActiveStock || 'N/A'}</div>
-              <div className="text-xs text-muted-foreground">Most Active</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="hover-scale bg-gradient-to-br from-warning/10 to-warning/5">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-warning">💰</div>
-              <div className="text-lg font-semibold">{virtualCoins.toLocaleString()}</div>
-              <div className="text-xs text-muted-foreground">Your Coins</div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Your Balance Card */}
+        <Card className="max-w-sm mx-auto hover-scale bg-gradient-to-br from-primary/10 to-secondary/10">
+          <CardContent className="p-6 text-center">
+            <div className="text-2xl font-bold text-primary mb-1">💰</div>
+            <div className="text-2xl font-bold">{virtualCoins.toLocaleString()}</div>
+            <div className="text-sm text-muted-foreground">Your Virtual Coins</div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Search and Filters */}
@@ -522,165 +442,109 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
         </Select>
       </div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Sidebar */}
-        <div className="lg:col-span-1 space-y-4">
-          {/* Market Status */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Zap className="h-5 w-5 text-primary" />
-                Market Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className={`px-3 py-1 rounded-full text-sm font-medium text-center ${
-                stockAPI.isMarketOpen() 
-                  ? 'bg-success text-success-foreground' 
-                  : 'bg-warning text-warning-foreground'
-              }`}>
-                {stockAPI.isMarketOpen() ? '🟢 Market Open' : '🔴 Market Closed'}
-              </div>
-              <div className="text-sm text-center text-muted-foreground">
-                Last updated: {lastUpdated}
-              </div>
+      {/* Main Content - Full Width Stock Grid */}
+      <div>
+        {filteredStocks.length === 0 ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No stocks found</h3>
+              <p className="text-muted-foreground mb-4">
+                Try adjusting your search or explore different sectors
+              </p>
+              <Button onClick={() => {
+                setSearchQuery('');
+                setSelectedSector('all');
+              }}>
+                Show All Stocks
+              </Button>
             </CardContent>
           </Card>
-
-          {/* Top Discussions */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-primary" />
-                Hot Discussions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {recentDiscussions.slice(0, 3).map((discussion) => (
-                <div key={discussion.id} className="p-2 rounded border bg-muted/50">
-                  <div className="font-medium text-sm truncate">{discussion.title}</div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-3 w-3 text-warning" />
-                      <span className="text-xs">{discussion.upvotes}</span>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredStocks.map((stock) => (
+              <Card key={stock.symbol} className="hover-scale transition-all duration-300 hover:shadow-xl border-2 hover:border-primary/20">
+                <CardContent className="p-6 space-y-4">
+                  {/* Stock Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-bold">{stock.symbol}</h3>
+                        <Badge variant="outline" className="text-xs">
+                          {stock.sector === 'Technology' ? '💻' : 
+                           stock.sector === 'Healthcare' ? '🏥' :
+                           stock.sector === 'Financial' ? '🏦' : 
+                           stock.sector === 'Consumer' ? '🛍️' :
+                           stock.sector === 'Energy' ? '⚡' :
+                           stock.sector === 'Automotive' ? '🚗' : '🏢'}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-1">{stock.name}</p>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      by {discussion.user_profile?.display_name || 'Anonymous'}
-                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleStockClick(stock)}
+                      className="p-2 hover:bg-primary/10"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
                   </div>
-                </div>
-              ))}
-              {recentDiscussions.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center">
-                  No stock discussions yet
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* Stock Grid */}
-        <div className="lg:col-span-3">
-          {filteredStocks.length === 0 ? (
-            <Card className="text-center py-12">
-              <CardContent>
-                <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No stocks found</h3>
-                <p className="text-muted-foreground mb-4">
-                  Try adjusting your search or explore different sectors
-                </p>
-                <Button onClick={() => {
-                  setSearchQuery('');
-                  setSelectedSector('all');
-                }}>
-                  Show All Stocks
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filteredStocks.map((stock) => (
-                <Card key={stock.symbol} className="hover-scale transition-all duration-300 hover:shadow-xl">
-                  <CardContent className="p-6 space-y-4">
-                    {/* Stock Header */}
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-lg font-bold">{stock.symbol}</h3>
-                          <Badge variant="outline" className="text-xs">
-                            {stock.sector === 'Technology' ? '💻' : 
-                             stock.sector === 'Healthcare' ? '🏥' :
-                             stock.sector === 'Financial' ? '🏦' : '🏢'}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground line-clamp-1">{stock.name}</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleStockClick(stock)}
-                        className="p-1"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                  {/* Price Display */}
+                  <div className="space-y-2">
+                    <div className="text-2xl font-bold">
+                      ${stock.price.toFixed(2)}
                     </div>
+                    <div className={`flex items-center gap-1 text-sm ${
+                      stock.changePercent >= 0 ? 'text-success' : 'text-destructive'
+                    }`}>
+                      <span>{stock.changePercent >= 0 ? '📈' : '📉'}</span>
+                      <span>
+                        {stock.changePercent >= 0 ? '+' : ''}${stock.change.toFixed(2)} 
+                        ({stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(1)}%)
+                      </span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      💰 Cost: {Math.floor(stock.price)} coins per share
+                    </div>
+                  </div>
 
-                    {/* Price Display */}
-                    <div className="space-y-2">
-                      <div className="text-2xl font-bold">
-                        ${stock.price.toFixed(2)}
-                      </div>
-                      <div className={`flex items-center gap-1 text-sm ${
-                        stock.changePercent >= 0 ? 'text-success' : 'text-destructive'
-                      }`}>
-                        <span>{stock.changePercent >= 0 ? '📈' : '📉'}</span>
-                        <span>
-                          {stock.changePercent >= 0 ? '+' : ''}${stock.change.toFixed(2)} 
-                          ({stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(1)}%)
-                        </span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        💰 Cost: {Math.floor(stock.price)} coins per share
-                      </div>
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-muted/50 p-2 rounded">
+                      <div className="text-muted-foreground">Market Cap</div>
+                      <div className="font-medium">${stock.marketCap}</div>
                     </div>
+                    <div className="bg-muted/50 p-2 rounded">
+                      <div className="text-muted-foreground">Volume</div>
+                      <div className="font-medium">{(stock.volume || 0).toLocaleString()}</div>
+                    </div>
+                  </div>
 
-                    {/* Quick Stats */}
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="bg-muted/50 p-2 rounded">
-                        <div className="text-muted-foreground">Market Cap</div>
-                        <div className="font-medium">${stock.marketCap}</div>
-                      </div>
-                      <div className="bg-muted/50 p-2 rounded">
-                        <div className="text-muted-foreground">Volume</div>
-                        <div className="font-medium">{(stock.volume || 0).toLocaleString()}</div>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleBuyClick(stock)}
-                        className="flex-1 bg-gradient-to-r from-success to-success/80 hover:from-success/90 hover:to-success/70"
-                        disabled={Math.floor(stock.price) > virtualCoins}
-                      >
-                        <ShoppingCart className="w-4 h-4 mr-1" />
-                        Buy
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => handleStockClick(stock)}
-                        className="px-3"
-                      >
-                        <BarChart3 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
+                  {/* Action Buttons */}
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleBuyClick(stock)}
+                      className="flex-1 bg-gradient-to-r from-success to-success/80 hover:from-success/90 hover:to-success/70"
+                      disabled={Math.floor(stock.price) > virtualCoins}
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-1" />
+                      Buy
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleStockClick(stock)}
+                      className="px-3 hover:bg-primary/10"
+                    >
+                      <BarChart3 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Dialogs */}
