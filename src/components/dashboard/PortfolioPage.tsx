@@ -49,15 +49,29 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
     fetchPortfolioData();
   }, [userId]);
 
+  // Add effect to refetch when component becomes visible again
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchPortfolioData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [userId]);
+
   const fetchPortfolioData = async () => {
     try {
       const { data, error } = await supabase
         .from('portfolios')
         .select('*')
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
+      console.log('Portfolio data fetched:', data); // Debug log
       setHoldings(data || []);
       calculatePortfolioStats(data || []);
     } catch (error) {

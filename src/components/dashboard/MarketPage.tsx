@@ -218,15 +218,20 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
         .select('*')
         .eq('user_id', userId)
         .eq('stock_symbol', stock.symbol)
-        .single();
+        .maybeSingle();
 
       if (existingStock) {
-        // Update existing holding
+        // Update existing holding - calculate new average price
+        const newShares = existingStock.shares + 1;
+        const newAvgPrice = ((existingStock.buy_price * existingStock.shares) + stock.price) / newShares;
+        
         const { error } = await supabase
           .from('portfolios')
           .update({
-            shares: existingStock.shares + 1,
-            current_price: stock.price
+            shares: newShares,
+            buy_price: newAvgPrice,
+            current_price: stock.price,
+            updated_at: new Date().toISOString()
           })
           .eq('id', existingStock.id);
 
@@ -242,7 +247,9 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
             shares: 1,
             buy_price: stock.price,
             current_price: stock.price,
-            category: stock.sector
+            category: stock.sector,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           });
 
         if (error) throw error;

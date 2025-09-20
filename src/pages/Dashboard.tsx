@@ -108,7 +108,10 @@ const Dashboard = () => {
                 />
               )}
               {activeTab === 'portfolio' && (
-                <PortfolioPage userId={user.id} />
+                <PortfolioPage 
+                  key={`portfolio-${activeTab}`} 
+                  userId={user.id} 
+                />
               )}
               {activeTab === 'learn' && (
                 <LearnPage 
