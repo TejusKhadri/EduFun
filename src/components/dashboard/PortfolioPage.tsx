@@ -117,8 +117,8 @@ export function PortfolioPage({ userId }: PortfolioPageProps) {
 
   return (
     <div className="space-y-6">
-      {/* Market Indices */}
-      <div className="bg-white border-b">
+      {/* Market Indices - Top Information Bar */}
+      <div className="bg-white border-b border-gray-200">
         <div className="flex items-center gap-8 px-6 py-3 overflow-x-auto">
           {MARKET_INDICES.map((index) => (
             <div key={index.name} className="flex items-center gap-2 whitespace-nowrap">

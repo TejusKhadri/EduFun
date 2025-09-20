@@ -60,7 +60,33 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
   const loadInitialStocks = async () => {
     try {
       setLoading(true);
-      // Load Indian market indices and trending stocks
+      // Load regular trending stocks only for main display
+      const trendingQuotes = await stockAPI.getTrendingStocks();
+      
+      const stockData = trendingQuotes.map(quote => ({
+        symbol: quote.symbol,
+        name: quote.name,
+        price: quote.price,
+        change: quote.change,
+        changePercent: quote.changePercent,
+        sector: quote.sector || 'Technology',
+        description: stockAPI.getStockDescription(quote.symbol)
+      }));
+
+      setStocks(stockData);
+    } catch (error) {
+      console.error('Error loading stocks:', error);
+      // Fallback to static data
+      loadFallbackStocks();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadTrendingWithIndices = async () => {
+    try {
+      setLoading(true);
+      // Load trending stocks with Indian market indices for trending view
       const trendingQuotes = await stockAPI.getTrendingStocks();
       
       // Add mock Indian indices data
@@ -70,7 +96,7 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
         { symbol: 'BANKNIFTY', name: 'Bank Nifty', price: 55458.85, change: -268.60, changePercent: -0.48, volume: 0, sector: 'Index' }
       ];
       
-      // Combine indices with regular stocks
+      // Show indices first, then trending stocks
       const stockData = [
         ...indianIndices.map(index => ({
           symbol: index.symbol,
@@ -79,7 +105,7 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
           change: index.change,
           changePercent: index.changePercent,
           sector: index.sector,
-          description: `Indian stock market ${index.name} index`
+          description: `Indian stock market ${index.name} index - View only, not available for purchase`
         })),
         ...trendingQuotes.slice(0, 5).map(quote => ({
           symbol: quote.symbol,
@@ -94,8 +120,7 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
 
       setStocks(stockData);
     } catch (error) {
-      console.error('Error loading stocks:', error);
-      // Fallback to static data
+      console.error('Error loading trending stocks:', error);
       loadFallbackStocks();
     } finally {
       setLoading(false);
@@ -281,7 +306,7 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
             </Select>
             <Button 
               variant="outline" 
-              onClick={() => loadInitialStocks()}
+              onClick={() => loadTrendingWithIndices()}
               className="whitespace-nowrap"
             >
               <TrendingUp className="w-4 h-4 mr-2" />
@@ -390,7 +415,7 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
                   disabled={Math.floor(stock.price) > virtualCoins || stock.sector === 'Index'}
                 >
                   <ShoppingCart className="w-4 h-4 mr-2" />
-                  {stock.sector === 'Index' ? 'Market Index' : `Buy 1 Share - ${Math.floor(stock.price)} coins`}
+                  {stock.sector === 'Index' ? 'View Only' : `Buy 1 Share - ${Math.floor(stock.price)} coins`}
                 </Button>
               </CardContent>
             </Card>
