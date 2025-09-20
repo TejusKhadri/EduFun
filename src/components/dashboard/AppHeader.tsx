@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 interface AppHeaderProps {
   virtualCoins: number;
   onBuyCoins: () => void;
+  onSettingsClick: () => void;
 }
 
-export function AppHeader({ virtualCoins, onBuyCoins }: AppHeaderProps) {
+export function AppHeader({ virtualCoins, onBuyCoins, onSettingsClick }: AppHeaderProps) {
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -45,7 +46,11 @@ export function AppHeader({ virtualCoins, onBuyCoins }: AppHeaderProps) {
             Buy Coins
           </Button>
           
-          <Button variant="ghost" size="sm">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={onSettingsClick}
+          >
             <Settings className="w-4 h-4" />
           </Button>
         </div>
