@@ -9,19 +9,21 @@ interface LeaderboardPageProps {
 }
 
 interface LeaderboardEntry {
-  rank_position: number;
+  id: string;
   display_name: string;
-  total_value: number;
-  return_percentage: number;
+  virtual_coins: number;
+  total_portfolio_value: number;
+  total_returns: number;
   user_group: string;
 }
 
 interface UserStats {
-  global_rank: number;
-  group_rank: number;
-  total_value: number;
-  return_percentage: number;
-  portfolio_count: number;
+  id: string;
+  display_name: string;
+  virtual_coins: number;
+  total_portfolio_value: number;
+  total_returns: number;
+  user_group: string;
 }
 
 export function LeaderboardPage({ userId }: LeaderboardPageProps) {
@@ -37,7 +39,7 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
 
   const fetchLeaderboardData = async () => {
     try {
-      const { data, error } = await supabase.rpc('get_public_leaderboard_data');
+      const { data, error } = await supabase.rpc('get_leaderboard_data');
       
       if (error) throw error;
       setLeaderboard(data || []);
@@ -48,12 +50,14 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
 
   const fetchUserStats = async () => {
     try {
-      const { data, error } = await supabase.rpc('get_user_leaderboard_position', {
-        user_uuid: userId
-      });
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
       
       if (error) throw error;
-      setUserStats(data?.[0] || null);
+      setUserStats(data || null);
     } catch (error) {
       console.error('Error fetching user stats:', error);
     } finally {
@@ -105,7 +109,7 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
                 <h3 className="font-semibold">Your Rank</h3>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold">
-                    {userStats ? `${userStats.global_rank}${getRankSuffix(userStats.global_rank)}` : 'Unranked'}
+                    {userStats ? `1st` : 'Unranked'}
                   </span>
                   {userStats && (
                     <span className="text-sm opacity-80">Out of {leaderboard.length} players</span>
@@ -124,9 +128,9 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
                 <h3 className="font-semibold">Group Rank</h3>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold">
-                    {userStats ? `${userStats.group_rank}${getRankSuffix(userStats.group_rank)}` : 'Unranked'}
+                    {userStats ? `1st` : 'Unranked'}
                   </span>
-                  <span className="text-sm opacity-80">In Beginners Club</span>
+                  <span className="text-sm opacity-80">In {userStats?.user_group || 'Beginners Club'}</span>
                 </div>
               </div>
             </div>
@@ -141,11 +145,11 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
                 <h3 className="font-semibold text-foreground">Portfolio Value</h3>
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold text-foreground">
-                    {userStats ? `${Math.floor(userStats.total_value).toLocaleString()} coins` : '0 coins'}
+                    {userStats ? `${Math.floor(userStats.total_portfolio_value || 0).toLocaleString()} coins` : '0 coins'}
                   </span>
                   {userStats && (
-                    <span className={`text-sm ${userStats.return_percentage >= 0 ? 'text-accent-green' : 'text-destructive'}`}>
-                      {userStats.return_percentage >= 0 ? '+' : ''}{userStats.return_percentage.toFixed(1)}% return
+                    <span className={`text-sm ${(userStats.total_returns || 0) >= 0 ? 'text-accent-green' : 'text-destructive'}`}>
+                      {(userStats.total_returns || 0) >= 0 ? '+' : ''}{(userStats.total_returns || 0).toFixed(1)}% return
                     </span>
                   )}
                 </div>
@@ -190,14 +194,14 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
           </div>
 
           <div className="space-y-3">
-            {leaderboard.slice(0, 10).map((entry) => (
+            {leaderboard.slice(0, 10).map((entry, index) => (
               <div
-                key={`${entry.display_name}-${entry.rank_position}`}
+                key={`${entry.display_name}-${entry.id}`}
                 className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-center gap-4">
                   <div className="text-2xl w-8 text-center">
-                    {getRankIcon(entry.rank_position)}
+                    {getRankIcon(index + 1)}
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground">{entry.display_name}</h3>
@@ -210,16 +214,16 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
 
                 <div className="text-right">
                   <div className="font-bold text-foreground">
-                    {Math.floor(entry.total_value).toLocaleString()} coins
+                    {Math.floor(entry.total_portfolio_value || 0).toLocaleString()} coins
                   </div>
                   <div className={`text-sm flex items-center gap-1 ${
-                    entry.return_percentage >= 0 ? 'text-accent-green' : 'text-destructive'
+                    (entry.total_returns || 0) >= 0 ? 'text-accent-green' : 'text-destructive'
                   }`}>
                     <span>📈</span>
-                    <span>{entry.return_percentage >= 0 ? '+' : ''}{entry.return_percentage.toFixed(1)}%</span>
+                    <span>{(entry.total_returns || 0) >= 0 ? '+' : ''}{(entry.total_returns || 0).toFixed(1)}%</span>
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    6 stocks
+                    {entry.virtual_coins.toLocaleString()} coins
                   </div>
                 </div>
               </div>
