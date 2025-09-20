@@ -7,6 +7,7 @@ import { MarketPage } from '@/components/dashboard/MarketPage';
 import { PortfolioPage } from '@/components/dashboard/PortfolioPage';
 import { LearnPage } from '@/components/dashboard/LearnPage';
 import { LeaderboardPage } from '@/components/dashboard/LeaderboardPage';
+import { BuyCoinsDialog } from '@/components/dashboard/BuyCoinsDialog';
 import { supabase } from '@/integrations/supabase/client';
 
 type TabType = 'market' | 'portfolio' | 'learn' | 'leaderboard';
@@ -16,6 +17,7 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<TabType>('market');
   const [virtualCoins, setVirtualCoins] = useState<number>(16419);
   const [profile, setProfile] = useState<any>(null);
+  const [showBuyCoinsDialog, setShowBuyCoinsDialog] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -53,6 +55,16 @@ const Dashboard = () => {
     }
   };
 
+  const handleBuyCoins = (coins: number, price: number) => {
+    if (price === 0) {
+      // Free coins
+      updateVirtualCoins(virtualCoins + coins);
+    } else {
+      // This will be handled by Stripe integration later
+      console.log(`Purchasing ${coins} coins for $${price}`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -69,7 +81,13 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gray-50">
       <AppHeader 
         virtualCoins={virtualCoins} 
-        onBuyCoins={() => updateVirtualCoins(virtualCoins + 1000)}
+        onBuyCoins={() => setShowBuyCoinsDialog(true)}
+      />
+      
+      <BuyCoinsDialog
+        open={showBuyCoinsDialog}
+        onOpenChange={setShowBuyCoinsDialog}
+        onSelectPlan={handleBuyCoins}
       />
       
       <div className="max-w-7xl mx-auto px-6 py-8">
