@@ -41,7 +41,7 @@ const Auth = () => {
         toast.success('Signed in successfully!');
       } else if (mode === 'forgot') {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin,
+          redirectTo: `${window.location.protocol}//${window.location.host}/`,
         });
         if (error) throw error;
         toast.success('Password reset email sent! Please check your inbox.');
@@ -59,7 +59,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: `${window.location.protocol}//${window.location.host}/`,
         }
       });
       if (error) throw error;
