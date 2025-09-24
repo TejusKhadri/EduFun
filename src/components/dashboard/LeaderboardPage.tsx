@@ -78,8 +78,23 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchAllData();
+    if (userId) {
+      fetchAllData();
+    } else {
+      setLoading(false);
+    }
   }, [userId]);
+
+  // Early return if no userId
+  if (!userId) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-muted-foreground">Please log in to view the leaderboard</p>
+        </div>
+      </div>
+    );
+  }
 
   const fetchAllData = async () => {
     await Promise.all([
