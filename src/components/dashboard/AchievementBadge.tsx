@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface AchievementBadgeProps {
-  type: 'beginner' | 'rising-star' | 'trader' | 'investor' | 'whale' | 'profit-master' | 'streak' | 'diversified';
+  type: string; // Allow any string since achievement types come from database
   earned?: boolean;
   className?: string;
 }
@@ -60,6 +60,20 @@ const BADGE_CONFIG = {
 
 export function AchievementBadge({ type, earned = true, className }: AchievementBadgeProps) {
   const config = BADGE_CONFIG[type];
+  
+  // Handle unknown achievement types
+  if (!config) {
+    return (
+      <div className={cn(
+        "group relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium",
+        "bg-gray-100 text-gray-600 border-gray-200",
+        className
+      )}>
+        <span className="text-sm">🏆</span>
+        <span className="font-semibold">{type}</span>
+      </div>
+    );
+  }
   
   return (
     <div className={cn(
