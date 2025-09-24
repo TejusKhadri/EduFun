@@ -76,6 +76,7 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
   const [timeframe, setTimeframe] = useState<'week' | 'month'>('week');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (userId) {
@@ -89,32 +90,92 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
   if (!userId) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="flex flex-col items-center gap-4">
-          <p className="text-muted-foreground">Please log in to view the leaderboard</p>
+        <div className="flex flex-col items-center gap-4 text-center">
+          <Trophy className="w-16 h-16 text-muted-foreground/50" />
+          <div>
+            <h3 className="text-lg font-semibold text-muted-foreground">Login Required</h3>
+            <p className="text-muted-foreground">Please log in to view the leaderboard and compete with other traders!</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="p-4 rounded-full bg-destructive/10">
+            <Trophy className="w-8 h-8 text-destructive" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-destructive">Unable to Load Leaderboard</h3>
+            <p className="text-muted-foreground">{error}</p>
+            <Button 
+              onClick={() => {
+                setError(null);
+                fetchAllData();
+              }}
+              className="mt-4"
+              variant="outline"
+            >
+              Try Again
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   const fetchAllData = async () => {
-    await Promise.all([
-      fetchLeaderboardData(),
-      fetchUserStats(),
-      fetchUserRank(),
-      fetchUserAchievements(),
-      fetchPerformanceHistory(),
-      checkAndAwardAchievements()
-    ]);
-    setLoading(false);
+    try {
+      setError(null);
+      await Promise.allSettled([
+        fetchLeaderboardData(),
+        fetchUserStats(),
+        fetchUserRank(),
+        fetchUserAchievements(),
+        fetchPerformanceHistory(),
+        checkAndAwardAchievements()
+      ]);
+    } catch (error) {
+      console.error('Error fetching leaderboard data:', error);
+      setError('Failed to load leaderboard data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchLeaderboardData = async () => {
     try {
+      // Try using RPC first
       const { data, error } = await supabase.rpc('get_leaderboard_data');
       
-      if (error) throw error;
+      if (error) {
+        // Fallback to direct query if RPC doesn't exist
+        console.log('RPC not available, using fallback query');
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('display_name, total_portfolio_value, total_returns, user_group, avatar_url')
+          .order('total_portfolio_value', { ascending: false })
+          .limit(50);
+        
+        if (profilesError) throw profilesError;
+        
+        const leaderboardWithRanks = (profilesData || []).map((entry, index) => ({
+          rank_position: index + 1,
+          display_name: entry.display_name || `User ${index + 1}`,
+          total_portfolio_value: entry.total_portfolio_value || 10000,
+          total_returns: entry.total_returns || 0,
+          user_group: entry.user_group || 'Beginners Club',
+          avatar_url: entry.avatar_url
+        }));
+        
+        setLeaderboard(leaderboardWithRanks);
+        return;
+      }
       
-      // Fetch avatars for leaderboard entries
+      // Process RPC data
       const leaderboardWithAvatars = await Promise.all(
         (data || []).map(async (entry: any) => {
           const { data: profile } = await supabase
@@ -130,7 +191,8 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
       setLeaderboard(leaderboardWithAvatars);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
-      toast.error('Failed to load leaderboard');
+      // Set empty leaderboard instead of failing completely
+      setLeaderboard([]);
     }
   };
 
@@ -153,10 +215,41 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
     try {
       const { data, error } = await supabase.rpc('get_user_rank', { user_uuid: userId });
       
-      if (error) throw error;
+      if (error) {
+        // Fallback: calculate rank from profiles table
+        console.log('RPC not available, calculating rank from profiles');
+        const { data: allProfiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, display_name, total_portfolio_value, total_returns, user_group')
+          .order('total_portfolio_value', { ascending: false });
+        
+        if (profilesError) throw profilesError;
+        
+        const userIndex = (allProfiles || []).findIndex(profile => profile.user_id === userId);
+        if (userIndex !== -1) {
+          const userProfile = allProfiles[userIndex];
+          setUserRank({
+            user_rank: userIndex + 1,
+            display_name: userProfile.display_name || 'Anonymous',
+            total_portfolio_value: userProfile.total_portfolio_value || 10000,
+            total_returns: userProfile.total_returns || 0,
+            user_group: userProfile.user_group || 'Beginners Club'
+          });
+        }
+        return;
+      }
+      
       setUserRank(data?.[0] || null);
     } catch (error) {
       console.error('Error fetching user rank:', error);
+      // Set a default rank instead of failing
+      setUserRank({
+        user_rank: 0,
+        display_name: 'You',
+        total_portfolio_value: 10000,
+        total_returns: 0,
+        user_group: 'Beginners Club'
+      });
     }
   };
 
@@ -173,6 +266,7 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
       setAchievements(data || []);
     } catch (error) {
       console.error('Error fetching achievements:', error);
+      setAchievements([]);
     }
   };
 
@@ -184,10 +278,33 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
         days_back: daysBack
       });
       
-      if (error) throw error;
+      if (error) {
+        // Fallback: use portfolio_history table
+        console.log('RPC not available, using portfolio_history table');
+        const { data: historyData, error: historyError } = await supabase
+          .from('portfolio_history')
+          .select('*')
+          .eq('user_id', userId)
+          .order('recorded_at', { ascending: false })
+          .limit(daysBack);
+        
+        if (historyError) throw historyError;
+        
+        const formattedHistory = (historyData || []).map(entry => ({
+          date: entry.recorded_at,
+          portfolio_value: entry.portfolio_value,
+          total_returns: entry.total_returns,
+          rank_position: entry.rank_position || 0
+        }));
+        
+        setPerformanceHistory(formattedHistory);
+        return;
+      }
+      
       setPerformanceHistory(data || []);
     } catch (error) {
       console.error('Error fetching performance history:', error);
+      setPerformanceHistory([]);
     }
   };
 
@@ -195,12 +312,13 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
     try {
       await supabase.rpc('check_and_award_achievements', { user_uuid: userId });
     } catch (error) {
-      console.error('Error checking achievements:', error);
+      console.log('Achievement RPC not available, skipping');
     }
   };
 
   const handleRefresh = async () => {
     setRefreshing(true);
+    setError(null);
     await fetchAllData();
     setRefreshing(false);
     toast.success('Leaderboard refreshed!');
@@ -451,18 +569,26 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {leaderboard.slice(0, 20).map((entry, index) => (
-                <LeaderboardEntry
-                  key={`${entry.display_name}-${entry.rank_position}`}
-                  rank={entry.rank_position}
-                  name={entry.display_name}
-                  avatar={entry.avatar_url}
-                  value={entry.total_portfolio_value}
-                  returns={entry.total_returns}
-                  isCurrentUser={entry.display_name === userStats?.display_name}
-                  className="animate-slide-up"
-                />
-              ))}
+              {leaderboard.length > 0 ? (
+                leaderboard.slice(0, 20).map((entry, index) => (
+                  <LeaderboardEntry
+                    key={`${entry.display_name}-${entry.rank_position}`}
+                    rank={entry.rank_position}
+                    name={entry.display_name}
+                    avatar={entry.avatar_url}
+                    value={entry.total_portfolio_value}
+                    returns={entry.total_returns}
+                    isCurrentUser={entry.display_name === userStats?.display_name}
+                    className="animate-slide-up"
+                  />
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <Trophy className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-muted-foreground">No traders found yet.</p>
+                  <p className="text-sm text-muted-foreground">Start trading to appear on the leaderboard!</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -476,21 +602,29 @@ export function LeaderboardPage({ userId }: LeaderboardPageProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {leaderboard
-                .filter(entry => entry.user_group === userStats?.user_group)
-                .slice(0, 10)
-                .map((entry, index) => (
-                  <LeaderboardEntry
-                    key={`${entry.display_name}-${entry.rank_position}`}
-                    rank={entry.rank_position}
-                    name={entry.display_name}
-                    avatar={entry.avatar_url}
-                    value={entry.total_portfolio_value}
-                    returns={entry.total_returns}
-                    isCurrentUser={entry.display_name === userStats?.display_name}
-                    className="animate-slide-up"
-                  />
-                ))}
+              {leaderboard.filter(entry => entry.user_group === userStats?.user_group).length > 0 ? (
+                leaderboard
+                  .filter(entry => entry.user_group === userStats?.user_group)
+                  .slice(0, 10)
+                  .map((entry, index) => (
+                    <LeaderboardEntry
+                      key={`${entry.display_name}-${entry.rank_position}`}
+                      rank={entry.rank_position}
+                      name={entry.display_name}
+                      avatar={entry.avatar_url}
+                      value={entry.total_portfolio_value}
+                      returns={entry.total_returns}
+                      isCurrentUser={entry.display_name === userStats?.display_name}
+                      className="animate-slide-up"
+                    />
+                  ))
+              ) : (
+                <div className="text-center py-8">
+                  <Users className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                  <p className="text-muted-foreground">No group members found yet.</p>
+                  <p className="text-sm text-muted-foreground">Invite friends to join your group!</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
