@@ -1,73 +1,58 @@
-# Welcome to your Lovable project
+EduFun
+EduFun is a stock market simulation app designed specifically for kids to learn the basics of investing in a fun and interactive way. This full-stack educational application provides a safe environment where kids can practice trading stocks, understand market dynamics, and build financial literacy skills.
 
-## Project info
+Features
+Interactive stock market simulation tailored for kids
 
-**URL**: https://lovable.dev/projects/26d87a3e-5199-41e6-81cd-77c676e93599
+Real-time data updates and seamless user experience
 
-## How can I edit this code?
+Secure Google Single Sign-On (SSO) authentication
 
-There are several ways of editing your application.
+Responsive and engaging UI built with React, TypeScript, and Tailwind CSS
 
-**Use Lovable**
+Backend powered by Supabase with PostgreSQL, real-time synchronization, and serverless functions
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/26d87a3e-5199-41e6-81cd-77c676e93599) and start prompting.
+Continuous deployment and version control integration using GitHub
 
-Changes made via Lovable will be committed automatically to this repo.
+Technologies Used
+Lovable: AI-powered vibe coding platform for rapid frontend development
 
-**Use your preferred IDE**
+React: Frontend UI framework
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+TypeScript: Strongly typed JavaScript development
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Tailwind CSS: Utility-first CSS framework for styling
 
-Follow these steps:
+Supabase: Backend-as-a-Service platform providing Postgres database, authentication, and real-time updates
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+Google SSO: Secure authentication via Google accounts
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+GitHub: Source control and continuous integration/deployment
 
-# Step 3: Install the necessary dependencies.
-npm i
+Live Demo
+Try the app live at: https://edufun.lovable.app/
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+Repository
+Source code is hosted at: https://github.com/TejusKhadri/EduFun
+
+Getting Started
+To run this project locally:
+
+Clone the repository:
+
+text
+git clone https://github.com/TejusKhadri/EduFun.git
+Navigate to the project directory:
+
+text
+cd EduFun
+Install dependencies:
+
+text
+npm install
+Start the development server:
+
+text
 npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/26d87a3e-5199-41e6-81cd-77c676e93599) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Contribution
+Contributions and suggestions are welcome! Feel free to open issues or submit pull requests to improve the app.
