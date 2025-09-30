@@ -1,5 +1,5 @@
-// Stock Market API Integration
-// Using Alpha Vantage API for real-time stock data
+// Stock Market API Integration - Yahoo Finance via Edge Function
+import { supabase } from '@/integrations/supabase/client';
 
 export interface StockQuote {
   symbol: string;
@@ -10,6 +10,10 @@ export interface StockQuote {
   volume: number;
   marketCap?: number;
   sector?: string;
+  high?: number;
+  low?: number;
+  open?: number;
+  previousClose?: number;
 }
 
 export interface StockSearchResult {
@@ -23,17 +27,6 @@ export interface StockSearchResult {
   currency: string;
   matchScore: string;
 }
-
-// Free API endpoints that don't require API keys
-const STOCK_APIS = {
-  // Yahoo Finance Alternative (free)
-  quote: (symbol: string) => `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`,
-  search: (query: string) => `https://query1.finance.yahoo.com/v1/finance/search?q=${query}`,
-  
-  // Backup API - Financial Modeling Prep (free tier)
-  backup_quote: (symbol: string) => `https://financialmodelingprep.com/api/v3/quote/${symbol}?apikey=demo`,
-  backup_search: (query: string) => `https://financialmodelingprep.com/api/v3/search?query=${query}&limit=10&apikey=demo`
-};
 
 // Fortune 100 companies for educational investing
 export const FORTUNE_100_STOCKS = [
@@ -150,202 +143,41 @@ export class StockAPI {
     return Date.now() - cached.timestamp < this.CACHE_DURATION;
   }
 
-  private async fetchWithFallback(symbol: string): Promise<any> {
-    // Skip external APIs and use our curated realistic prices
-    return this.getRealisticPrice(symbol);
-  }
-
-  private parseYahooResponse(data: any, symbol: string): StockQuote {
+  private async callEdgeFunction(body: any): Promise<any> {
     try {
-      const result = data.chart.result[0];
-      const meta = result.meta;
-      const quote = result.indicators.quote[0];
-      
-      const currentPrice = meta.regularMarketPrice || quote.close[quote.close.length - 1];
-      const previousClose = meta.previousClose || quote.close[quote.close.length - 2];
-      const change = currentPrice - previousClose;
-      const changePercent = (change / previousClose) * 100;
+      console.log('Calling Yahoo Finance edge function:', body.action);
+      const { data, error } = await supabase.functions.invoke('yahoo-finance', { body });
 
-      return {
-        symbol: symbol.toUpperCase(),
-        name: meta.longName || this.getCompanyName(symbol),
-        price: Math.round(currentPrice * 100) / 100,
-        change: Math.round(change * 100) / 100,
-        changePercent: Math.round(changePercent * 100) / 100,
-        volume: meta.regularMarketVolume || 0,
-        marketCap: meta.marketCap,
-        sector: this.getSector(symbol)
-      };
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
+      }
+      if (!data.success) {
+        console.error('Yahoo Finance API error:', data.error);
+        throw new Error(data.error || 'Unknown error from Yahoo Finance');
+      }
+      
+      return data.data;
     } catch (error) {
-      console.error('Error parsing Yahoo response:', error);
-      return this.getRealisticPrice(symbol);
+      console.error('Failed to call edge function:', error);
+      throw error;
     }
   }
 
-  private parseTwelveDataResponse(data: any, symbol: string): StockQuote {
-    try {
-      const currentPrice = parseFloat(data.close);
-      const previousClose = parseFloat(data.previous_close);
-      const change = currentPrice - previousClose;
-      const changePercent = (change / previousClose) * 100;
-
-      return {
-        symbol: symbol.toUpperCase(),
-        name: data.name || this.getCompanyName(symbol),
-        price: Math.round(currentPrice * 100) / 100,
-        change: Math.round(change * 100) / 100,
-        changePercent: Math.round(changePercent * 100) / 100,
-        volume: parseInt(data.volume) || 0,
-        sector: this.getSector(symbol)
-      };
-    } catch (error) {
-      console.error('Error parsing TwelveData response:', error);
-      return this.getRealisticPrice(symbol);
-    }
-  }
-
-  private parseFMPResponse(data: any, symbol: string): StockQuote {
-    try {
-      const quote = data[0];
-      return {
-        symbol: symbol.toUpperCase(),
-        name: quote.name || this.getCompanyName(symbol),
-        price: Math.round(quote.price * 100) / 100,
-        change: Math.round(quote.change * 100) / 100,
-        changePercent: Math.round(quote.changesPercentage * 100) / 100,
-        volume: quote.volume || 0,
-        marketCap: quote.marketCap,
-        sector: this.getSector(symbol)
-      };
-    } catch (error) {
-      console.error('Error parsing FMP response:', error);
-      return this.getRealisticPrice(symbol);
-    }
-  }
-
-  private getRealisticPrice(symbol: string): StockQuote {
-    // Use realistic prices based on recent market data (as of Dec 2024)
-    const realisticPrices: { [key: string]: { price: number; change: number } } = {
-      // Technology Giants
-      'AAPL': { price: 245.50, change: 2.15 },
-      'MSFT': { price: 415.25, change: -1.80 },
-      'GOOGL': { price: 175.80, change: 3.42 },
-      'META': { price: 545.75, change: 8.20 },
-      'NVDA': { price: 875.30, change: 15.45 },
-      'AMZN': { price: 185.90, change: -2.10 },
-      'ORCL': { price: 175.85, change: 2.45 },
-      'IBM': { price: 210.30, change: 1.25 },
-      'INTC': { price: 22.80, change: -0.35 },
-      'CSCO': { price: 58.75, change: 0.85 },
-      
-      // Retail & E-commerce
-      'WMT': { price: 185.30, change: 2.10 },
-      'COST': { price: 925.40, change: 12.80 },
-      'HD': { price: 385.65, change: 4.25 },
-      'TGT': { price: 152.80, change: -1.45 },
-      
-      // Automotive & Transportation
-      'TSLA': { price: 248.85, change: 12.30 },
-      'F': { price: 10.85, change: 0.25 },
-      'GM': { price: 58.75, change: 1.45 },
-      'UPS': { price: 135.40, change: 2.15 },
-      'FDX': { price: 285.75, change: 3.80 },
-      
-      // Entertainment & Media
-      'DIS': { price: 115.25, change: 1.85 },
-      'NFLX': { price: 485.60, change: -3.20 },
-      'CMCSA': { price: 42.85, change: 0.65 },
-      
-      // Food & Beverages
-      'KO': { price: 62.45, change: 0.35 },
-      'PEP': { price: 168.90, change: 1.20 },
-      'MCD': { price: 285.75, change: 2.80 },
-      'SBUX': { price: 98.65, change: -0.95 },
-      'KHC': { price: 32.45, change: 0.55 },
-      
-      // Healthcare & Pharmaceuticals
-      'JNJ': { price: 152.30, change: 0.85 },
-      'PFE': { price: 25.80, change: -0.40 },
-      'UNH': { price: 580.25, change: 8.45 },
-      'ABT': { price: 115.75, change: 1.65 },
-      'CVS': { price: 58.40, change: -0.85 },
-      
-      // Financial Services
-      'JPM': { price: 235.85, change: 3.65 },
-      'BAC': { price: 45.20, change: 0.75 },
-      'WFC': { price: 72.45, change: 1.25 },
-      'GS': { price: 485.75, change: 8.95 },
-      'MS': { price: 125.80, change: 2.35 },
-      'AXP': { price: 285.40, change: 4.85 },
-      'V': { price: 315.25, change: 3.75 },
-      'MA': { price: 485.90, change: 6.45 },
-      
-      // Energy & Utilities
-      'XOM': { price: 118.45, change: 2.35 },
-      'CVX': { price: 165.80, change: 3.15 },
-      'COP': { price: 112.75, change: 1.85 },
-      'DUK': { price: 110.25, change: 0.95 },
-      'SO': { price: 85.40, change: 1.15 },
-      'NEE': { price: 78.65, change: 0.85 },
-      
-      // Aerospace & Defense
-      'BA': { price: 155.90, change: -2.85 },
-      'LMT': { price: 485.75, change: 6.25 },
-      'RTX': { price: 125.40, change: 2.15 },
-      
-      // Consumer Goods
-      'PG': { price: 165.75, change: 1.05 },
-      'UL': { price: 56.30, change: 0.45 },
-      'CL': { price: 95.85, change: 0.75 },
-      'KMB': { price: 138.40, change: 1.25 },
-      
-      // Sports & Apparel
-      'NKE': { price: 78.40, change: -1.15 },
-      
-      // Telecommunications
-      'VZ': { price: 42.85, change: 0.45 },
-      'T': { price: 22.75, change: -0.15 },
-      
-      // Industrial & Manufacturing
-      'CAT': { price: 385.75, change: 8.45 },
-      'DE': { price: 445.80, change: 6.25 },
-      'GE': { price: 185.40, change: 3.75 },
-      'MMM': { price: 132.85, change: 1.95 },
-      
-      // Additional
-      'BRK.B': { price: 485.75, change: 6.85 },
-      'ADBE': { price: 485.90, change: 8.25 },
-      'CRM': { price: 325.75, change: 5.45 },
-      'PYPL': { price: 85.40, change: 1.25 }
-    };
-
-    const priceData = realisticPrices[symbol.toUpperCase()];
-    if (priceData) {
-      const changePercent = (priceData.change / priceData.price) * 100;
-      return {
-        symbol: symbol.toUpperCase(),
-        name: this.getCompanyName(symbol),
-        price: priceData.price,
-        change: priceData.change,
-        changePercent: Math.round(changePercent * 100) / 100,
-        volume: Math.floor(Math.random() * 50000000) + 10000000, // 10M-60M volume
-        sector: this.getSector(symbol)
-      };
-    }
-
-    // For stocks not in our realistic price list, generate reasonable mock data
-    const basePrice = Math.random() * 300 + 20; // $20-$320
-    const change = (Math.random() - 0.5) * 8; // -$4 to +$4
-    const changePercent = (change / basePrice) * 100;
-
+  private parseYahooQuote(data: any): StockQuote {
     return {
-      symbol: symbol.toUpperCase(),
-      name: this.getCompanyName(symbol),
-      price: Math.round(basePrice * 100) / 100,
-      change: Math.round(change * 100) / 100,
-      changePercent: Math.round(changePercent * 100) / 100,
-      volume: Math.floor(Math.random() * 30000000) + 5000000,
-      sector: this.getSector(symbol)
+      symbol: data.symbol,
+      name: data.shortName || data.longName || data.symbol,
+      price: data.regularMarketPrice || 0,
+      change: data.regularMarketChange || 0,
+      changePercent: data.regularMarketChangePercent || 0,
+      high: data.regularMarketDayHigh || 0,
+      low: data.regularMarketDayLow || 0,
+      open: data.regularMarketOpen || 0,
+      previousClose: data.regularMarketPreviousClose || 0,
+      volume: data.regularMarketVolume || 0,
+      marketCap: data.marketCap,
+      sector: this.getSector(data.symbol)
     };
   }
 
@@ -364,7 +196,6 @@ export class StockAPI {
     return company?.description || `A great company to learn about investing with ${symbol.toUpperCase()}!`;
   }
 
-  // Get all Fortune 100 stocks
   getAllNYSEStocks(): typeof FORTUNE_100_STOCKS {
     return FORTUNE_100_STOCKS;
   }
@@ -376,14 +207,27 @@ export class StockAPI {
       return this.cache.get(cacheKey)!.data;
     }
 
-    const quote = await this.fetchWithFallback(symbol);
-    this.cache.set(cacheKey, { data: quote, timestamp: Date.now() });
-    return quote;
+    try {
+      const data = await this.callEdgeFunction({ action: 'quote', symbol });
+      const quote = this.parseYahooQuote(data);
+      this.cache.set(cacheKey, { data: quote, timestamp: Date.now() });
+      return quote;
+    } catch (error) {
+      console.error(`Failed to fetch quote for ${symbol}, using fallback data:`, error);
+      // Fallback to mock data for educational purposes
+      return this.getFallbackQuote(symbol);
+    }
   }
 
   async getMultipleQuotes(symbols: string[]): Promise<StockQuote[]> {
-    const promises = symbols.map(symbol => this.getQuote(symbol));
-    return Promise.all(promises);
+    try {
+      const data = await this.callEdgeFunction({ action: 'multipleQuotes', symbols });
+      return data.map((quote: any) => this.parseYahooQuote(quote));
+    } catch (error) {
+      console.error('Failed to fetch multiple quotes, using fallback:', error);
+      // Fallback to sequential fetches
+      return Promise.all(symbols.map(symbol => this.getQuote(symbol)));
+    }
   }
 
   async searchStocks(query: string): Promise<StockSearchResult[]> {
@@ -401,27 +245,42 @@ export class StockAPI {
       }));
     }
 
-    const filtered = FORTUNE_100_STOCKS.filter(stock => 
-      stock.name.toLowerCase().includes(query.toLowerCase()) ||
-      stock.symbol.toLowerCase().includes(query.toLowerCase()) ||
-      stock.sector.toLowerCase().includes(query.toLowerCase()) ||
-      stock.description.toLowerCase().includes(query.toLowerCase())
-    );
+    try {
+      const data = await this.callEdgeFunction({ action: 'search', query });
+      return data.slice(0, 10).map((result: any) => ({
+        symbol: result.symbol,
+        name: result.shortname || result.longname || result.symbol,
+        type: result.quoteType || result.typeDisp || 'Equity',
+        region: 'United States',
+        marketOpen: '09:30',
+        marketClose: '16:00',
+        timezone: 'UTC-04',
+        currency: 'USD',
+        matchScore: result.score || '1.0000'
+      }));
+    } catch (error) {
+      console.error('Search failed, using local fallback:', error);
+      // Fallback to local search in FORTUNE_100_STOCKS
+      const filtered = FORTUNE_100_STOCKS.filter(stock => 
+        stock.name.toLowerCase().includes(query.toLowerCase()) ||
+        stock.symbol.toLowerCase().includes(query.toLowerCase()) ||
+        stock.sector.toLowerCase().includes(query.toLowerCase())
+      );
 
-    return filtered.map(stock => ({
-      symbol: stock.symbol,
-      name: stock.name,
-      type: 'Equity',
-      region: 'United States',
-      marketOpen: '09:30',
-      marketClose: '16:00',
-      timezone: 'UTC-04',
-      currency: 'USD',
-      matchScore: '1.0000'
-    }));
+      return filtered.map(stock => ({
+        symbol: stock.symbol,
+        name: stock.name,
+        type: 'Equity',
+        region: 'United States',
+        marketOpen: '09:30',
+        marketClose: '16:00',
+        timezone: 'UTC-04',
+        currency: 'USD',
+        matchScore: '1.0000'
+      }));
+    }
   }
 
-  // Get market status
   isMarketOpen(): boolean {
     const now = new Date();
     const day = now.getDay(); // 0 = Sunday, 6 = Saturday
@@ -434,17 +293,43 @@ export class StockAPI {
     return hour >= 9 && hour < 16;
   }
 
-  // Get trending stocks for kids
   async getTrendingStocks(): Promise<StockQuote[]> {
-    const trendingSymbols = ['AAPL', 'MSFT', 'GOOGL', 'TSLA', 'DIS', 'NFLX', 'AMZN', 'META'];
-    return this.getMultipleQuotes(trendingSymbols);
+    try {
+      const data = await this.callEdgeFunction({ action: 'trending' });
+      return data.map((quote: any) => this.parseYahooQuote(quote));
+    } catch (error) {
+      console.error('Failed to fetch trending stocks, using fallback:', error);
+      // Fallback to popular stocks
+      const fallbackSymbols = ['AAPL', 'MSFT', 'GOOGL', 'TSLA', 'DIS', 'NFLX', 'AMZN', 'META'];
+      return this.getMultipleQuotes(fallbackSymbols);
+    }
   }
 
-  // Get stocks by sector
   async getStocksBySector(sector: string): Promise<StockQuote[]> {
     const stocksInSector = FORTUNE_100_STOCKS
       .filter(stock => stock.sector.toLowerCase() === sector.toLowerCase())
       .map(stock => stock.symbol);
     return this.getMultipleQuotes(stocksInSector);
+  }
+
+  // Fallback for when API is unavailable (educational mode)
+  private getFallbackQuote(symbol: string): StockQuote {
+    const basePrice = Math.random() * 300 + 20;
+    const change = (Math.random() - 0.5) * 8;
+    const changePercent = (change / basePrice) * 100;
+
+    return {
+      symbol: symbol.toUpperCase(),
+      name: this.getCompanyName(symbol),
+      price: Math.round(basePrice * 100) / 100,
+      change: Math.round(change * 100) / 100,
+      changePercent: Math.round(changePercent * 100) / 100,
+      volume: Math.floor(Math.random() * 30000000) + 5000000,
+      sector: this.getSector(symbol),
+      high: Math.round((basePrice + Math.abs(change)) * 100) / 100,
+      low: Math.round((basePrice - Math.abs(change)) * 100) / 100,
+      open: Math.round((basePrice + (Math.random() - 0.5) * 4) * 100) / 100,
+      previousClose: Math.round((basePrice - change) * 100) / 100
+    };
   }
 }
