@@ -1,5 +1,4 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import yahooFinance from "npm:yahoo-finance2@2.14.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,14 +14,71 @@ interface QuoteRequest {
   period2?: string;
 }
 
+// Yahoo Finance API endpoints (using publicly available endpoints)
+const YAHOO_API_BASE = 'https://query1.finance.yahoo.com';
+
+async function fetchQuote(symbol: string) {
+  const url = `${YAHOO_API_BASE}/v8/finance/chart/${symbol}`;
+  console.log(`Fetching quote for ${symbol}`);
+  
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch quote for ${symbol}: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  const quote = data.chart.result[0];
+  const meta = quote.meta;
+  
+  return {
+    symbol: meta.symbol,
+    shortName: meta.symbol,
+    longName: meta.longName || meta.symbol,
+    regularMarketPrice: meta.regularMarketPrice,
+    regularMarketChange: meta.regularMarketPrice - meta.chartPreviousClose,
+    regularMarketChangePercent: ((meta.regularMarketPrice - meta.chartPreviousClose) / meta.chartPreviousClose) * 100,
+    regularMarketDayHigh: meta.regularMarketDayHigh,
+    regularMarketDayLow: meta.regularMarketDayLow,
+    regularMarketOpen: meta.regularMarketOpen || meta.regularMarketPrice,
+    regularMarketPreviousClose: meta.chartPreviousClose,
+    regularMarketVolume: meta.regularMarketVolume || 0,
+    marketCap: meta.marketCap
+  };
+}
+
+async function searchSymbols(query: string) {
+  const url = `${YAHOO_API_BASE}/v1/finance/search?q=${encodeURIComponent(query)}&quotesCount=10&newsCount=0`;
+  console.log(`Searching for: ${query}`);
+  
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Search failed: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data.quotes || [];
+}
+
+async function getTrending() {
+  const url = `${YAHOO_API_BASE}/v1/finance/trending/US`;
+  console.log('Fetching trending stocks');
+  
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch trending: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data.finance.result[0].quotes || [];
+}
+
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { action, symbol, symbols, query, period1, period2 }: QuoteRequest = await req.json();
+    const { action, symbol, symbols, query }: QuoteRequest = await req.json();
     console.log('Yahoo Finance request:', { action, symbol, symbols, query });
 
     let data;
@@ -32,7 +88,7 @@ Deno.serve(async (req) => {
         if (!symbol) {
           throw new Error('Symbol is required for quote action');
         }
-        data = await yahooFinance.quote(symbol);
+        data = await fetchQuote(symbol);
         console.log(`Quote fetched for ${symbol}:`, data.regularMarketPrice);
         break;
 
@@ -43,7 +99,7 @@ Deno.serve(async (req) => {
         data = await Promise.all(
           symbols.map(async (sym) => {
             try {
-              return await yahooFinance.quote(sym);
+              return await fetchQuote(sym);
             } catch (error) {
               console.error(`Error fetching ${sym}:`, error.message);
               return null;
@@ -58,21 +114,19 @@ Deno.serve(async (req) => {
         if (!query) {
           throw new Error('Query is required for search action');
         }
-        const searchResults = await yahooFinance.search(query);
-        data = searchResults.quotes.slice(0, 10); // Limit to 10 results
+        const searchResults = await searchSymbols(query);
+        data = searchResults.slice(0, 10);
         console.log(`Search for "${query}" returned ${data.length} results`);
         break;
 
       case 'trending':
-        // Get trending stocks from US market
-        const trendingData = await yahooFinance.trendingSymbols('US');
-        const trendingSymbols = trendingData.quotes.slice(0, 20).map(q => q.symbol);
+        const trendingData = await getTrending();
+        const trendingSymbols = trendingData.slice(0, 20).map((q: any) => q.symbol);
         
-        // Fetch detailed quotes for trending symbols
         data = await Promise.all(
-          trendingSymbols.map(async (sym) => {
+          trendingSymbols.map(async (sym: string) => {
             try {
-              return await yahooFinance.quote(sym);
+              return await fetchQuote(sym);
             } catch (error) {
               console.error(`Error fetching trending ${sym}:`, error.message);
               return null;
@@ -81,18 +135,6 @@ Deno.serve(async (req) => {
         );
         data = data.filter(quote => quote !== null);
         console.log(`Fetched ${data.length} trending stocks`);
-        break;
-
-      case 'historical':
-        if (!symbol) {
-          throw new Error('Symbol is required for historical action');
-        }
-        const queryOptions = {
-          period1: period1 || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          period2: period2 || new Date().toISOString().split('T')[0],
-        };
-        data = await yahooFinance.historical(symbol, queryOptions);
-        console.log(`Historical data fetched for ${symbol}: ${data.length} records`);
         break;
 
       default:
