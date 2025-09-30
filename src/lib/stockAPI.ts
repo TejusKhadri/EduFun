@@ -145,21 +145,17 @@ export class StockAPI {
 
   private async callEdgeFunction(body: any): Promise<any> {
     try {
-      console.log('Calling Yahoo Finance edge function:', body.action);
       const { data, error } = await supabase.functions.invoke('yahoo-finance', { body });
 
       if (error) {
-        console.error('Edge function error:', error);
         throw error;
       }
       if (!data.success) {
-        console.error('Yahoo Finance API error:', data.error);
         throw new Error(data.error || 'Unknown error from Yahoo Finance');
       }
       
       return data.data;
     } catch (error) {
-      console.error('Failed to call edge function:', error);
       throw error;
     }
   }
@@ -213,8 +209,7 @@ export class StockAPI {
       this.cache.set(cacheKey, { data: quote, timestamp: Date.now() });
       return quote;
     } catch (error) {
-      console.error(`Failed to fetch quote for ${symbol}, using fallback data:`, error);
-      // Fallback to mock data for educational purposes
+      // Silently fallback to educational mock data
       return this.getFallbackQuote(symbol);
     }
   }
@@ -224,8 +219,7 @@ export class StockAPI {
       const data = await this.callEdgeFunction({ action: 'multipleQuotes', symbols });
       return data.map((quote: any) => this.parseYahooQuote(quote));
     } catch (error) {
-      console.error('Failed to fetch multiple quotes, using fallback:', error);
-      // Fallback to sequential fetches
+      // Silently fallback to sequential fetches with mock data
       return Promise.all(symbols.map(symbol => this.getQuote(symbol)));
     }
   }
@@ -259,8 +253,7 @@ export class StockAPI {
         matchScore: result.score || '1.0000'
       }));
     } catch (error) {
-      console.error('Search failed, using local fallback:', error);
-      // Fallback to local search in FORTUNE_100_STOCKS
+      // Silently fallback to local search in FORTUNE_100_STOCKS
       const filtered = FORTUNE_100_STOCKS.filter(stock => 
         stock.name.toLowerCase().includes(query.toLowerCase()) ||
         stock.symbol.toLowerCase().includes(query.toLowerCase()) ||
@@ -298,8 +291,7 @@ export class StockAPI {
       const data = await this.callEdgeFunction({ action: 'trending' });
       return data.map((quote: any) => this.parseYahooQuote(quote));
     } catch (error) {
-      console.error('Failed to fetch trending stocks, using fallback:', error);
-      // Fallback to popular stocks
+      // Silently fallback to popular educational stocks
       const fallbackSymbols = ['AAPL', 'MSFT', 'GOOGL', 'TSLA', 'DIS', 'NFLX', 'AMZN', 'META'];
       return this.getMultipleQuotes(fallbackSymbols);
     }
