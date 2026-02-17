@@ -304,24 +304,41 @@ export class StockAPI {
     return this.getMultipleQuotes(stocksInSector);
   }
 
-  // Fallback for when API is unavailable (educational mode)
+  // Realistic fallback prices for educational mode
+  private static readonly FALLBACK_PRICES: Record<string, number> = {
+    'AAPL': 198.50, 'MSFT': 420.15, 'GOOGL': 175.80, 'META': 505.30,
+    'NVDA': 880.40, 'AMZN': 185.60, 'TSLA': 245.70, 'NFLX': 620.10,
+    'DIS': 112.40, 'KO': 62.30, 'PEP': 172.80, 'MCD': 295.50,
+    'JNJ': 158.20, 'PFE': 28.50, 'UNH': 520.30, 'JPM': 195.40,
+    'BAC': 37.20, 'V': 278.90, 'MA': 455.60, 'WMT': 168.30,
+    'COST': 730.50, 'HD': 345.20, 'NKE': 98.70, 'SBUX': 95.40,
+    'BA': 215.30, 'CAT': 340.10, 'GE': 160.80, 'XOM': 112.50,
+    'CVX': 155.20, 'INTC': 32.40, 'IBM': 188.70, 'CRM': 265.30,
+    'ADBE': 540.20, 'PYPL': 65.80, 'F': 12.50, 'GM': 45.30,
+    'VZ': 40.80, 'T': 18.90, 'PG': 165.40, 'BRK.B': 410.60,
+  };
+
   private getFallbackQuote(symbol: string): StockQuote {
-    const basePrice = Math.random() * 300 + 20;
-    const change = (Math.random() - 0.5) * 8;
-    const changePercent = (change / basePrice) * 100;
+    const upperSymbol = symbol.toUpperCase();
+    const basePrice = StockAPI.FALLBACK_PRICES[upperSymbol] || (Math.random() * 200 + 50);
+    // Small daily variation ±2%
+    const variation = (Math.random() - 0.5) * 0.04;
+    const price = Math.round(basePrice * (1 + variation) * 100) / 100;
+    const change = Math.round((price - basePrice) * 100) / 100;
+    const changePercent = Math.round((change / basePrice) * 10000) / 100;
 
     return {
-      symbol: symbol.toUpperCase(),
+      symbol: upperSymbol,
       name: this.getCompanyName(symbol),
-      price: Math.round(basePrice * 100) / 100,
-      change: Math.round(change * 100) / 100,
-      changePercent: Math.round(changePercent * 100) / 100,
+      price,
+      change,
+      changePercent,
       volume: Math.floor(Math.random() * 30000000) + 5000000,
       sector: this.getSector(symbol),
-      high: Math.round((basePrice + Math.abs(change)) * 100) / 100,
-      low: Math.round((basePrice - Math.abs(change)) * 100) / 100,
-      open: Math.round((basePrice + (Math.random() - 0.5) * 4) * 100) / 100,
-      previousClose: Math.round((basePrice - change) * 100) / 100
+      high: Math.round((price + Math.abs(change) * 1.5) * 100) / 100,
+      low: Math.round((price - Math.abs(change) * 1.5) * 100) / 100,
+      open: Math.round(basePrice * 100) / 100,
+      previousClose: Math.round(basePrice * 100) / 100
     };
   }
 }
