@@ -134,6 +134,11 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
     try {
       const trendingQuotes = await stockAPI.getTrendingStocks();
       
+      if (!trendingQuotes || trendingQuotes.length === 0) {
+        loadFallbackStocks();
+        return;
+      }
+
       const stockData = trendingQuotes.map(quote => ({
         symbol: quote.symbol,
         name: quote.name,
@@ -144,30 +149,54 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
         description: stockAPI.getStockDescription(quote.symbol),
         funFacts: generateFunFacts(quote.symbol),
         marketCap: generateMarketCap(),
-        volume: Math.floor(Math.random() * 10000000) + 1000000
+        volume: quote.volume || Math.floor(Math.random() * 10000000) + 1000000
       }));
 
-      setStocks(stockData);
+      if (stockData.length > 0) {
+        setStocks(stockData);
+      } else {
+        loadFallbackStocks();
+      }
     } catch (error) {
       console.error('Error loading stocks:', error);
       loadFallbackStocks();
     }
   };
 
-  const loadFallbackStocks = () => {
-    const fallbackStocks = FORTUNE_100_STOCKS.slice(0, 12).map(stock => ({
-      symbol: stock.symbol,
-      name: stock.name,
-      price: Math.random() * 200 + 50,
-      change: (Math.random() - 0.5) * 10,
-      changePercent: (Math.random() - 0.5) * 5,
-      sector: stock.sector,
-      description: stock.description,
-      funFacts: generateFunFacts(stock.symbol),
-      marketCap: generateMarketCap(),
-      volume: Math.floor(Math.random() * 10000000) + 1000000
-    }));
-    setStocks(fallbackStocks);
+  const loadFallbackStocks = async () => {
+    try {
+      // Use the StockAPI fallback which has realistic prices
+      const symbols = FORTUNE_100_STOCKS.slice(0, 16).map(s => s.symbol);
+      const quotes = await Promise.all(symbols.map(s => stockAPI.getQuote(s)));
+      const fallbackStocks = quotes.map((quote, i) => ({
+        symbol: quote.symbol,
+        name: quote.name,
+        price: quote.price,
+        change: quote.change,
+        changePercent: quote.changePercent,
+        sector: quote.sector || FORTUNE_100_STOCKS[i].sector,
+        description: FORTUNE_100_STOCKS[i].description,
+        funFacts: generateFunFacts(quote.symbol),
+        marketCap: generateMarketCap(),
+        volume: quote.volume || Math.floor(Math.random() * 10000000) + 1000000
+      }));
+      setStocks(fallbackStocks);
+    } catch {
+      // Absolute last resort with static data
+      const staticStocks = FORTUNE_100_STOCKS.slice(0, 12).map(stock => ({
+        symbol: stock.symbol,
+        name: stock.name,
+        price: 100 + Math.random() * 200,
+        change: (Math.random() - 0.5) * 10,
+        changePercent: (Math.random() - 0.5) * 5,
+        sector: stock.sector,
+        description: stock.description,
+        funFacts: generateFunFacts(stock.symbol),
+        marketCap: generateMarketCap(),
+        volume: Math.floor(Math.random() * 10000000) + 1000000
+      }));
+      setStocks(staticStocks);
+    }
   };
 
   const generateFunFacts = (symbol: string): string[] => {
@@ -187,6 +216,10 @@ export function MarketPage({ virtualCoins, onUpdateCoins, userId }: MarketPagePr
   };
 
   const loadUserBadges = async () => {
+    if (userId.startsWith('guest-')) {
+      setUserBadges([]);
+      return;
+    }
     try {
       const { data } = await supabase
         .from('user_achievements')
