@@ -16,18 +16,26 @@ import { supabase } from '@/integrations/supabase/client';
 type TabType = 'market' | 'portfolio' | 'learn' | 'leaderboard' | 'community';
 
 const Dashboard = () => {
-  const { user, loading } = useAuth();
+  const { user, guestUser, isAuthenticated, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('market');
   const [virtualCoins, setVirtualCoins] = useState<number>(16419);
   const [profile, setProfile] = useState<any>(null);
   const [showBuyCoinsDialog, setShowBuyCoinsDialog] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
+  const effectiveUserId = user?.id || guestUser?.id || 'guest';
+  const isGuest = !user && !!guestUser;
+
   useEffect(() => {
     if (user) {
       fetchProfile();
+    } else if (guestUser) {
+      setProfile({
+        display_name: guestUser.display_name,
+        avatar_url: null,
+      });
     }
-  }, [user]);
+  }, [user, guestUser]);
 
   const fetchProfile = async () => {
     if (!user) return;
@@ -47,9 +55,9 @@ const Dashboard = () => {
   };
 
   const updateVirtualCoins = async (newAmount: number) => {
-    if (!user) return;
-    
     setVirtualCoins(newAmount);
+    
+    if (!user || isGuest) return;
     
     const { error } = await supabase
       .from('profiles')
@@ -79,7 +87,7 @@ const Dashboard = () => {
     );
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return <Auth />;
   }
 
@@ -108,26 +116,26 @@ const Dashboard = () => {
                 <MarketPage 
                   virtualCoins={virtualCoins} 
                   onUpdateCoins={updateVirtualCoins}
-                  userId={user.id}
+                  userId={effectiveUserId}
                 />
               )}
               {activeTab === 'portfolio' && (
                 <PortfolioPage 
                   key={`portfolio-${activeTab}`} 
-                  userId={user.id} 
+                  userId={effectiveUserId} 
                 />
               )}
               {activeTab === 'learn' && (
                 <LearnPage 
                   onEarnCoins={(amount) => updateVirtualCoins(virtualCoins + amount)}
-                  userId={user.id}
+                  userId={effectiveUserId}
                 />
               )}
               {activeTab === 'leaderboard' && (
-                <LeaderboardPage userId={user.id} />
+                <LeaderboardPage userId={effectiveUserId} />
               )}
               {activeTab === 'community' && (
-                <CommunityPage userId={user.id} />
+                <CommunityPage userId={effectiveUserId} />
               )}
             </div>
           </div>
@@ -147,7 +155,7 @@ const Dashboard = () => {
           </div>
           <div className="max-w-7xl mx-auto px-6 py-8">
             <SettingsPage 
-              userId={user.id} 
+              userId={effectiveUserId} 
               onProfileUpdate={(updatedProfile) => setProfile(updatedProfile)}
             />
           </div>

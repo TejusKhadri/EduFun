@@ -514,7 +514,7 @@ export type Database = {
         Returns: undefined
       }
       get_leaderboard_data: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           display_name: string
           rank_position: number
